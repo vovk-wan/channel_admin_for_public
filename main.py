@@ -18,13 +18,13 @@ from scheduler_funcs import check_base, edit_group_list
 
 register_handlers(dp=dp)
 
-
 async def send_report_to_admins(text: str) -> None:
     """Отправляет сообщение в телеграме всем администраторам из списка"""
-
     for admin_id in admins_list:
-        await bot.send_message(chat_id=admin_id, text=text)
-
+        try:
+            await bot.send_message(chat_id=admin_id, text=text)
+        except Exception as err:
+            logger.error(err)
 
 @logger.catch
 async def on_startup(_) -> None:
