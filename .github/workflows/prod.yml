@@ -1,0 +1,32 @@
+name: channel_admin
+env:
+  DOCKER_USER: "deskent"
+  DOCKER_REPOSITORY_NAME: "deskent"
+  PROJECT_NAME: "channel_admin"
+  STAGE: "prod"
+  VERSION: "ver-${{ github.sha }}-prod"
+  COUNT: "1.0"
+on:
+  push:
+    branches: [ main ]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [create_docker_build]
+    env:
+      WORK_DIR: "/home/${{ secrets.USERNAME_PROD }}/deploy"
+    steps:
+      - name: Git clone
+        uses: actions/checkout@v2
+      - name: Executing remote ssh commands using ssh key
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST_PROD }}
+          username: ${{ secrets.USERNAME_PROD }}
+          key: ${{ secrets.SSH_KEY_PROD }}
+          script: |
+            cd ${{ env.WORK_DIR }}
+            docker-compose stop ${{ env.PROJECT_NAME }}
+            docker container rm ${{ env.PROJECT_NAME }}
+            docker rmi ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.PROJECT_NAME}}-${{ env.COUNT }} -f
+            docker-compose up --force-recreate -d --build ${{ env.PROJECT_NAME }}
