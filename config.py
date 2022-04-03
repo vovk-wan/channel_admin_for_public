@@ -32,9 +32,8 @@ with open("./db/session.txt", 'r', encoding='utf-8') as f:
     SESSION_STRING = f.read()
 
 # set admins list
-deskent = os.getenv("DESKENT_TELEGRAM_ID")
-vova = os.getenv("VOVA_TELEGRAM_ID")
-admins_list = [vova, deskent]
+me = os.getenv("ME_TELEGRAM_ID")
+admins_list = [me]
 DEBUG = int(os.getenv("DEBUG"))
 if not DEBUG:
     admins_list.extend(admins)
