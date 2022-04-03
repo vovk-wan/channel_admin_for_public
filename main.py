@@ -32,7 +32,7 @@ async def on_startup(_) -> None:
 
     try:
         # Отправляет сообщение админам при запуске бота
-        await send_report_to_admins(text="Channel_admin bot started")
+        await send_report_to_admins(text="Бот снова работает")
     except Exception:
         pass
     if not os.path.exists('./db'):
