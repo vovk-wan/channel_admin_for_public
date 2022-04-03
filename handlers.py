@@ -11,7 +11,7 @@ from aiogram.types.chat import ChatInviteLink, Chat
 from aiogram.dispatcher import FSMContext
 
 from keyboard import cancel_keyboard
-from config import logger, Dispatcher, bot, EMOJI, admins_list
+from config import logger, Dispatcher, bot, EMOJI, admins_list, LINK_EXPIRATION_TIME
 from models import User, Group, Channel
 from states import UserState, AdminState
 
@@ -31,10 +31,10 @@ async def admin_handler(message: Message, state: FSMContext) -> None:
         if group_id:
             group_name = Group.get_name_group_by_id(group_id)
         await message.answer(f'Команды администратора\n'
+                             f'изменить канал текущий канал "{channel_name}"\n'
                              f'/channel\n'
-                             f'изменить канал, текущий канал "{channel_name}"\n'
-                             f'/group\n'
-                             f'изменить группу текущая группа "{group_name}"')
+                             f'изменить группу текущая группа "{group_name}"\n'
+                             f''f'/group\n')
 
 
 @logger.catch
@@ -70,9 +70,17 @@ async def invitation_link_request(message: Message):
     # link = channel.invite_link
     user = User.get_users_by_telegram_id(user_id)
 
-    if member.status == 'member':
-        await message.answer(f'Вы уже есть в базе данных обратитесь к администратору '
-                             f'{EMOJI.hello}')
+    if user:
+        admins_name = ''
+        if channel:
+            admins = await channel.get_administrators()
+            for admin in admins:
+                if not admin.user.is_bot:
+                    admins_name += admin.user.mention + '\n'
+            await message.answer(f'Вы уже есть в базе данных обратитесь к администратору\n'
+                                 f'{EMOJI.hello}\n'
+                                 f'Администраторы:\n'
+                                 f'{admins_name}')
         return
 
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
@@ -93,6 +101,10 @@ async def add_phone_number(message: Message, state: FSMContext):
         return
     user_id = message.from_user.id
     phone = message.contact.phone_number
+    contact_id = message.contact.user_id
+    if contact_id != user_id:
+        await message.answer('Данные не совпадают, ссылка выслана не будет')
+        return
     logger.info('Processing of invitation link requests begins :')
     user = User.get_user_by_phone(phone[-10:])
     if not user:
@@ -102,7 +114,7 @@ async def add_phone_number(message: Message, state: FSMContext):
         return
     bot.approve_chat_join_request(chat_id=channel_id, user_id=user_id)
     time_limit = 5
-    expire_date = datetime.datetime.now() + datetime.timedelta(hours=time_limit)
+    expire_date = datetime.datetime.now() + datetime.timedelta(hours=LINK_EXPIRATION_TIME)
     try:
         await bot.unban_chat_member(channel_id, user_id)
     except Exception as exc:

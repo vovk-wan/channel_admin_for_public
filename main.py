@@ -32,7 +32,7 @@ async def on_startup(_) -> None:
 
     try:
         # Отправляет сообщение админам при запуске бота
-        await send_report_to_admins(text="Бот снова работает")
+        await send_report_to_admins(text="Бот запущен")
     except Exception:
         pass
     if not os.path.exists('./db'):
@@ -51,7 +51,7 @@ async def on_startup(_) -> None:
 async def on_shutdown(dp) -> None:
     """Действия при отключении бота."""
     try:
-        await send_report_to_admins(text="Channel_admin bot stopping")
+        await send_report_to_admins(text="Бот остановлен")
     except Exception:
         pass
     logger.warning("BOT shutting down.")
