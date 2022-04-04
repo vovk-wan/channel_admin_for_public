@@ -142,7 +142,7 @@ async def channel_kick_hackers(
             count += 1
         except aiogram.utils.exceptions.BadRequest as err:
             member: dict = all_members.get(telegram_id, {'error': 'Не удалось получить данные'})
-            text: str = 'не удалось удалить пользователя:\n' + ''.join(
+            text: str = 'Не удалось удалить пользователя:\n' + ''.join(
                 [f'{key}: {value}\n'
                  for key, value in member.items()]
             )
