@@ -16,7 +16,7 @@ def make_groups_list() -> Tuple:
     headers = {'content-type': 'multipart/form-data'}
     url = f'https://{ACCOUNT_NAME}.getcourse.ru/pl/api/account/groups?key={SECRET_KEY}'
     try:
-        response = requests.get(url=url, headers=headers, timeout=10)
+        response = requests.get(url=url, headers=headers, timeout=30)
         if response.status_code != 200:
             logger.error(f'module: getsource_requests {response.text} requests/group')
             return tuple()
@@ -44,7 +44,7 @@ def make_user_list_by_group(group_id) -> Tuple:
           f'/pl/api/account/groups/{group_id}/users?key={SECRET_KEY}&{filter_name}={filter_value}'
     export_id = None
     try:
-        response = requests.get(url=url, headers=headers, timeout=10)
+        response = requests.get(url=url, headers=headers, timeout=30)
         if response.status_code != 200:
             logger.error(f'module: getcourse_requests requests/user filter {filter_name}:{filter_value}')
             return tuple()
@@ -78,7 +78,7 @@ async def get_data(export_id: int, count_limit: int) -> Dict:
         count += 1
 
         try:
-            response = requests.get(url=url, headers=headers, timeout=10)
+            response = requests.get(url=url, headers=headers, timeout=30)
             if response.status_code != 200 or count >= count_limit:
                 logger.error(f'module: getcourse_requests requests/get_data {export_id}')
                 return {
