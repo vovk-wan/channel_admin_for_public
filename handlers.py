@@ -112,8 +112,6 @@ async def add_phone_number(message: Message, state: FSMContext):
             f'{EMOJI.sad} Извините, пользователь с таким телефоном в базе не найден.\n'
             f'Возможно база данных ещё не обновилась', reply_markup=ReplyKeyboardRemove())
         return
-    bot.approve_chat_join_request(chat_id=channel_id, user_id=user_id)
-    time_limit = 5
     expire_date = datetime.datetime.now() + datetime.timedelta(hours=LINK_EXPIRATION_TIME)
     try:
         await bot.unban_chat_member(channel_id, user_id)
@@ -125,7 +123,7 @@ async def add_phone_number(message: Message, state: FSMContext):
         await message.answer(
             text=link.invite_link)
         await message.answer(
-            f'Ссылка действительна в течении {time_limit} часов',
+            f'Ссылка действительна в течении {LINK_EXPIRATION_TIME} часов',
             reply_markup=ReplyKeyboardRemove())
         user.telegram_id = user_id
         user.save()
