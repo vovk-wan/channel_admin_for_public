@@ -48,10 +48,12 @@ def get_data_id_from_api(group_id: str) -> int:
     logger.debug('Starting checking ')
     response = make_user_list_by_group(group_id=group_id)
     if not response:
+
         logger.info('Data id not received.')
         return 0
     data_id, time_request = response
     logger.debug(' Data id received, requesting user data')
+
     return data_id
 
 
@@ -170,19 +172,24 @@ async def channel_maintenance():
     Функция обслуживания канала.
     :return:
     """
+
     logger.info(f'start channel maintenance: start')
+
     channel_id: str = Channel.get_channel()
     if not channel_id:
         await send_message_to_admin('Нет id канала, нужно добавить id канала и выбрать группу.\n'
                                     'воспользуйтесь командой.\n/admin')
+
         logger.error(f'start channel maintenance: not channel_id. work stopped ')
         return
     edit_group_list()
     logger.info(f'start channel maintenance:  get groups')
+
     group_id = Channel.get_group()
     if not group_id:
         await send_message_to_admin('Нет id группы, нужно выбрать группу.\n'
                                     'воспользуйтесь командой.\n/admin')
+
         logger.error(f'start channel maintenance:  not group_id. work stopped ')
         return
     logger.info(f'start channel maintenance:  get data')
@@ -199,6 +206,7 @@ async def channel_maintenance():
     await channel_kick_users(data, channel_id)
     count = add_new_users(data)
     logger.info(f'{count} users added to BD')
+
 
 
 async def kick_hackers():
