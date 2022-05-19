@@ -36,7 +36,7 @@ me = os.getenv("ME_TELEGRAM_ID")
 admins_list = [me]
 DEBUG = int(os.getenv("DEBUG"))
 if not DEBUG:
-    admins_list.extend(admins)
+    admins_list.extend({})
 
 
 class EMOJI:
@@ -46,29 +46,33 @@ class EMOJI:
 
 
 #  ********** LOGGER CONFIG ********************************
-
+LOGGING_DIRECTORY = 'logs'
+LOGGING_FILENAME = 'discord_mailer.log'
 PATH = os.getcwd()
+if not os.path.exists('./logs'):
+    os.mkdir("./logs")
 today = datetime.datetime.today().strftime("%Y-%m-%d")
-file_path = os.path.join(os.path.relpath(PATH, start=None), 'logs', today, 'channel_admin.log')
-
-LOG_LEVEL = "ERROR"
+file_path = os.path.join(PATH, LOGGING_DIRECTORY, today, LOGGING_FILENAME)
+LOG_LEVEL = "WARNING"
+DEBUG_LEVEL = "INFO"
+if DEBUG:
+    DEBUG_LEVEL = "DEBUG"
 logger_cfg = {
-   "handlers": [
-       {
-           "sink": sys.stdout,
-           "level": "INFO",
-           "format": "<white>{time:HH:mm:ss}</white> - <yellow>{level}</yellow> | <green>{message}</green>"
-       },
-       {
+    "handlers": [
+        {
+            "sink": sys.stdout,
+            "level": DEBUG_LEVEL,
+            "format": "<white>{time:HH:mm:ss}</white> - <yellow>{level}</yellow> | <green>{message}</green>"
+        },
+        {
             "sink": file_path, "level": LOG_LEVEL,
-            "format": "{time:YYYY-MM-DD HH:mm:ss} - {level}: || {message} ||",
+            "format": "{time:YYYY-MM-DD HH:mm:ss} - {level} | {message}",
             "rotation": "50 MB"
-       },
+        },
     ]
 }
 logger.configure(**logger_cfg)
-print('Start logging to:', file_path)
-
+logger.info('Start logging to:', file_path)
 #  ********** END OF LOGGER CONFIG *************************
 
 
