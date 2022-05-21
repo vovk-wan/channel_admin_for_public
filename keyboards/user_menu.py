@@ -111,8 +111,6 @@ def club_not_paid_() -> InlineKeyboardMarkup:
     )
 
 
-
-
 @logger.catch
 def contact_() -> InlineKeyboardMarkup:
 

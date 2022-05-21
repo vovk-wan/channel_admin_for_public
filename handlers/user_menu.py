@@ -24,13 +24,15 @@ from handlers import utils
 class Texts:
     """TODO Заменить на запросы к бд"""
     #  Приветственное сообщение Основное меню
-    start: str = (f"Здравствуйте! {EMOJI.hello}\n"
-            f"\n"
-            f"Я бот Закрытого финансового клуба Effective Finance.\n"
-            f"\n"
-            f"Для того, чтобы получить пригласительную ссылку "
-             f"в основную группу Клуба, наберите команду"
-            f" /invite и следуйте дальнейшим инструкциям.")
+    start: str = (
+        f"Здравствуйте! {EMOJI.hello}\n"
+        f"\n"
+        f"Я бот Закрытого финансового клуба Effective Finance.\n"
+        f"\n"
+        f"Для того, чтобы получить пригласительную ссылку "
+        f"в основную группу Клуба, наберите команду"
+        f" /invite и следуйте дальнейшим инструкциям."
+    )
 
     # Текст о клубе
     about: str = 'Text about club'
@@ -46,7 +48,6 @@ class Texts:
         'Text when a person is in the club for the first time and is already on the waiting list, '
         'but the course has not been paid'
     )
-
 
     # Текст после хочу в клуб если оплатил в клубе и не получал ссылку
     club_not_got_link: str = 'Text when the person was already in the club and the course was paid'
