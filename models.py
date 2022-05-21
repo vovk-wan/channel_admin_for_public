@@ -33,6 +33,15 @@ class BaseModel(Model):
         order_by = 'date_at'
 
 
+class Text(BaseModel):
+    """Class for text message table"""
+    name = CharField(max_length=50, verbose_name='Название сообщения')
+    message = TextField(verbose_name='Текст сообщения')
+
+    class Meta:
+        db_table = "text_messages"
+
+
 class Channel(BaseModel):
     channel_id = CharField(default='0', verbose_name='id канала')
     group_id = CharField(default='0', verbose_name='id канала')
