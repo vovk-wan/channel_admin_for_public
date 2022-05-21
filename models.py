@@ -291,7 +291,6 @@ class User(BaseModel):
     @logger.catch
     def exclude_user_by_getcourse_id(cls: 'User', getcourse_id: List[Any]) -> int:
         """
-        FIXME заменить на изменение статуса
         exclude user by getcourse id
         """
         return (
@@ -306,7 +305,12 @@ class User(BaseModel):
         """
         remove user by getcourse id if he was deleted from waiting list
         """
-        return cls.delete().where(cls.getcourse_id.not_in(getcourse_id)).execute()
+        return (
+            cls.delete().
+            where(cls.getcourse_id.not_in(getcourse_id)).
+            where(cls.member == False).
+            where(cls.status == Statuses.waiting).execute()
+                )
 
     @classmethod
     @logger.catch
@@ -385,14 +389,14 @@ def recreate_db(_db_file_name: str) -> None:
     with db:
         if os.path.exists(_db_file_name):
             drop_db()
-        db.create_tables([User, Channel, Group], safe=True)
-        logger.info('DB REcreated')
+        db.create_tables([User, Channel, Group, UserStatus, Text], safe=True)
+        logger.info('DB Recreated')
 
 
 if __name__ == '__main__':
     # test()
     recreate = 1
-    add_test_users = 0
+    add_test_users = 1
     add_admins = 0
     import random
     import string
