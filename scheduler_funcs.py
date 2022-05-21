@@ -85,14 +85,14 @@ async def channel_kick_users(data: list, channel_id: str) -> None:
     :return: None
     """
     getcourse_id = tuple(user.get('getcourse_id', None) for user in data)
-    list_for_kicked = User.get_list_users_for_kicked(getcourse_id=getcourse_id)
-    if list_for_kicked:
+    list_for_exclude = User.get_list_users_for_exclude(getcourse_id=getcourse_id)
+    if list_for_exclude:
         logger.info('List users for kicked received.\n Starting delete users for channel')
         channel: Chat = await bot.get_chat(channel_id)
         admins = await channel.get_administrators()
         admins_id = [str(user.user.id) for user in admins]
         count = 0
-        for telegram_id in list_for_kicked:
+        for telegram_id in list_for_exclude:
             if telegram_id and telegram_id not in admins_id:
                 try:
                     await bot.kick_chat_member(channel_id, int(telegram_id))
@@ -101,12 +101,12 @@ async def channel_kick_users(data: list, channel_id: str) -> None:
                     logger.error(f'{err.__traceback__.tb_frame}\n{err}')
         logger.info(
             f'Removed {count} users from the channel '
-            f'\n list of telegram ids of kicked users: {list_for_kicked}')
+            f'\n list of telegram ids of kicked users: {list_for_exclude}')
     else:
         logger.info(f'{EMOJI.like} No users to delete')
     logger.debug('Starting delete users from DB')
-    count = User.delete_user_by_getcourse_id(list(getcourse_id))
-    logger.info(f'{count}  users removed from BD')
+    count = User.exclude_user_by_getcourse_id(list(getcourse_id))
+    logger.info(f'{count}  users get status excluded')
 
 
 @logger.catch
@@ -159,7 +159,7 @@ async def channel_kick_hackers(
 @logger.catch
 def add_new_users(data: list) -> int:
     """
-    добавляет в бд
+    обновляет пользователей
     :param data:
     :return:
     """
@@ -205,13 +205,13 @@ async def channel_maintenance():
     logger.info(f'start channel maintenance: group')
     await channel_kick_users(data, channel_id)
     count = add_new_users(data)
-    logger.info(f'{count} users added to BD')
-
+    logger.info(f'{count} users updated to BD')
 
 
 async def kick_hackers():
     """
-    Функция для сбора данных и удаления из канала пользователей не присутствующих в базе
+    Функция для сбора данных и удаления из канала пользователей не записанных в базе
+     как члены клуба
     кроме администраторов канала
     """
     logger.info(f'start kick_hackers: {datetime.datetime.utcnow()}')
