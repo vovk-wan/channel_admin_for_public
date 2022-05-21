@@ -168,11 +168,14 @@ class User(BaseModel):
 
     @classmethod
     @logger.catch
-    def get_list_users_for_kicked(cls: 'User', getcourse_id: tuple) -> tuple:
+    def get_list_users_for_exclude(cls: 'User', getcourse_id: tuple) -> tuple:
         """Возвращает список пользователей которых нет в последнем обновлении"""
-        kicked_user = cls.select().where(cls.getcourse_id.not_in(getcourse_id)).execute()
-
-        return tuple(user.telegram_id for user in kicked_user if user.telegram_id)
+        exclude_users = (
+            cls.select().
+            where(cls.getcourse_id.not_in(getcourse_id)).
+            where(cls.member == True).execute()
+        )
+        return tuple(user.telegram_id for user in exclude_users if user.telegram_id)
 
     @classmethod
     @logger.catch
