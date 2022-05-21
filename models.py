@@ -216,28 +216,70 @@ class User(BaseModel):
 
     @classmethod
     @logger.catch
-    def add_new_user(
-            cls: 'User',
-            getcourse_id: str,
-            phone: str,
-            telegram_id: str = None,
-    ) -> str:
+    def update_users_from_club(
+            cls: 'User', getcourse_id: str, phone: str, telegram_id: str = None) -> 'User':
+        """
+        FIXME добавлять или обновлять статус
+        if the user is already in the database, returns None
+        if created user will return user id
+        nik_name: str
+        telegram_id: str
+        return: str
+        """
+        user = cls.get_user_by_phone(phone=phone)
+        if user:
+            if not user.member:
+                new_status = Statuses.returned if user.status == Statuses.excluded else Statuses.entered
+                user.getcourse_id = getcourse_id
+                user.member = True
+                user.status = new_status
+                user.status_updated = True
+                return user.save()
+        else:
+            result = cls.create(
+                            getcourse_id=getcourse_id, telegram_id=telegram_id, phone=phone,
+                            member=True, status=Statuses.entered
+                        )
+            return result
+
+    @classmethod
+    @logger.catch
+    def update_users_from_waiting_list(
+            cls: 'User', getcourse_id: str, phone: str, telegram_id: str = None) -> 'User':
         """
         if the user is already in the database, returns None
         if created user will return user id
         nik_name: str
         telegram_id: str
-        proxy: str
-        expiration: int  (hours)
         return: str
         """
-        user = cls.get_or_none(cls.getcourse_id == getcourse_id)
-        if not user:
+        user = cls.get_user_by_phone(phone=phone)
+        if user:
+            if not user.member and user.status != Statuses.waiting:
+                user.getcourse_id = getcourse_id
+                user.member = False
+                user.status = Statuses.waiting
+                user.status_updated = True
+                return user.save()
+        else:
             result = cls.create(
-                            getcourse_id=getcourse_id, telegram_id=telegram_id, phone=phone
-                        ).save()
-
+                            getcourse_id=getcourse_id, telegram_id=telegram_id, phone=phone,
+                            member=False, status=Statuses.waiting, status_updated=True
+                        )
             return result
+
+    @classmethod
+    @logger.catch
+    def add_challenger(
+            cls: 'User', phone: str, telegram_id: str = None) -> 'User':
+        """
+            function for added challenger
+        """
+        result = cls.create(
+            telegram_id=telegram_id, phone=phone, member=False,
+            status=Statuses.challenger, status_updated=True
+        )
+        return result
 
     @classmethod
     @logger.catch
