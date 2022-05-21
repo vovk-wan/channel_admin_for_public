@@ -1,6 +1,7 @@
 import datetime
 import os
 import sys
+from pathlib import Path
 
 from aiogram import Bot, Dispatcher
 from dotenv import load_dotenv
@@ -10,6 +11,8 @@ from peewee import SqliteDatabase
 
 from db.settings import *
 
+#  определяем директорию проекта
+BASE_DIR = Path(__file__).resolve().parent
 
 # Загружаем переменные из файла .env
 
@@ -28,7 +31,7 @@ dp = Dispatcher(bot, storage=storage)
 # telegram API settings
 API_ID = int(os.getenv("API_ID"))
 API_HASH = os.getenv("API_HASH")
-with open("./db/session.txt", 'r', encoding='utf-8') as f:
+with open(f"{BASE_DIR}/db/session.txt", 'r', encoding='utf-8') as f:
     SESSION_STRING = f.read()
 
 # set admins list
@@ -78,7 +81,7 @@ logger.info('Start logging to:', file_path)
 
 #  ********** DATABASE CONFIG *************************
 
-db_file_name = 'db/users.db'
+db_file_name = f'{BASE_DIR}/db/users.db'
 full_path = os.path.join(PATH, db_file_name)
 db = SqliteDatabase(
     full_path,
