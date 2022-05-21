@@ -203,10 +203,15 @@ class User(BaseModel):
     def update_users(cls: 'User', users: list) -> int:
         """
         Добавление отсутствующих пользователей
+        или обновление данных существующих пользователей
         """
         count = 0
-        for user in users:
-            count += bool(cls.add_new_user(**user))
+        if source == SourceData.club:
+            for user in users:
+                count += bool(cls.update_users_from_club(**user, source=source))
+        elif source == SourceData.waiting_list:
+            for user in users:
+                count += bool(cls.update_users_from_waiting_list(**user, source=source))
         return count
 
     @classmethod
