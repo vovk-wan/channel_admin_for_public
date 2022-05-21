@@ -147,13 +147,21 @@ class User(BaseModel):
         get_telegram_id_users
         get_user_by_telegram_id
         set_user_status_admin
-    """
-
-    getcourse_id = CharField(unique=True, verbose_name="id пользователя в getcourse")
+     """
+    getcourse_id = CharField(
+        default=None, null=True, unique=True, verbose_name="id пользователя в getcourse")
     phone = CharField(unique=True, verbose_name="id пользователя в телеграмм")
     telegram_id = CharField(
         unique=True, default=None, null=True, verbose_name="id пользователя в телеграмм")
     admin = BooleanField(default=False, verbose_name="Администраторство")
+    # -------------- update
+    status = CharField(max_length=50, verbose_name='Статус пользователя')
+    # когда статус обновлен проверяется нужно ли отправить сообщение и значение меняется на False
+    status_updated = BooleanField(default=True, verbose_name='Обновлен статус')
+    # в клубе, доступ оплачен, в основной группе
+    member = BooleanField(default=False, verbose_name='Член клуба')
+    # получал инвайт ссылку
+    got_invite = BooleanField(default=False, verbose_name='Получал инвайт ссылку')
 
     class Meta:
         db_table = "users"
