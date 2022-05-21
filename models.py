@@ -81,7 +81,7 @@ class Channel(BaseModel):
     @classmethod
     @logger.catch
     def get_group(cls) -> str:
-        """Функция возвращает id канала """
+        """Функция возвращает id группы """
         group = cls.select().first()
         return group.group_id if group else ''
 
@@ -139,7 +139,6 @@ class User(BaseModel):
       methods
         add_new_user
         update_users
-        delete_user_by_telegram_id
         is_admin
         get_all_users
         get_user_by_phone
@@ -182,10 +181,6 @@ class User(BaseModel):
     def get_users_by_telegram_id(cls: 'User', telegram_id: str) -> 'User':
         """
         Returns User`s class instance if user with telegram_id in database else None
-
-        if the user is already in the database, returns the user
-        otherwise it will return none
-
         return: User
         """
         return cls.get_or_none(cls.telegram_id == telegram_id)
@@ -309,7 +304,7 @@ class User(BaseModel):
     @logger.catch
     def delete_user_by_getcourse_id(cls: 'User', getcourse_id: List[Any]) -> int:
         """
-        delete user by getcourse id
+        remove user by getcourse id if he was deleted from waiting list
         """
         return cls.delete().where(cls.getcourse_id.not_in(getcourse_id)).execute()
 
@@ -399,8 +394,6 @@ if __name__ == '__main__':
     recreate = 1
     add_test_users = 0
     add_admins = 0
-    add_tokens = 0
-    set_proxy = 0
     import random
     import string
     test_user_list = (
