@@ -200,7 +200,7 @@ class User(BaseModel):
 
     @classmethod
     @logger.catch
-    def update_users(cls: 'User', users: list) -> int:
+    def update_users(cls: 'User', users: list, source: str) -> int:
         """
         Добавление отсутствующих пользователей
         или обновление данных существующих пользователей
