@@ -318,7 +318,7 @@ class User(BaseModel):
         return [
             user.telegram_id
             for user in cls.select(cls.telegram_id)
-                .where(cls.admin == False) if user.telegram_id
+                .where(cls.admin == False).where(cls.member == True).execute() if user.telegram_id
         ]
 
     @classmethod
