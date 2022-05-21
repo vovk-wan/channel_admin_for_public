@@ -116,6 +116,23 @@ class Group(BaseModel):
         return group.name if group else 'Нет группы'
 
 
+class UserStatus(BaseModel):
+    """
+    Model for table users_status
+    Table messages for statuses
+    """
+
+    challenger = TextField(verbose_name='Сообщение подаче заявки')
+    waiting = TextField(verbose_name='Сообщение при попадании в список ожидания')
+    entered = TextField(verbose_name='Сообщение при вступлении в клуб')
+    returned = TextField(verbose_name='Сообщение при возвращении в клуб после исключения')
+    excluded = TextField(verbose_name='Сообщение при исключении из клуба')
+    got_invite = TextField(verbose_name='Сообщение при повторном запросе ссылки')
+
+    class Meta:
+        db_table = "user_status"
+
+
 class User(BaseModel):
     """
     Model for table users
