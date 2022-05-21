@@ -9,7 +9,7 @@ from aiogram.types.chat import Chat
 from config import bot, logger, EMOJI, REQUEST_LIMIT, REQUEST_RATE, KICK_RATE, admins_list
 from get_channel_info import get_channel_data
 from getcourse_requests import get_data, make_user_list_by_group, make_groups_list
-from models import User, Channel, Group
+from models import User, Channel, Group, Statuses, SourceData
 
 
 @logger.catch
@@ -79,7 +79,7 @@ async def get_data_from_api(data_id: int) -> list:
 async def channel_kick_users(data: list, channel_id: str) -> None:
     """
     Удаляет пользователей с окончившейся подпиской из канала.
-    Удаляет записи этих пользователей из базы.
+    Меняет статус пользователей на исключен
     :param data: список пользователей полученных от API.
     :param channel_id: id канала который бот администрирует.
     :return: None
