@@ -1,6 +1,12 @@
+from models import User
 
-def get_position(telegram_id: str) -> list:
+
+def get_position(telegram_id: str, phone) -> list:
     pos = 40
+    user = User.get_user_by_phone(phone=phone)
+    if not user:
+        user = User.add_challenger(None, phone, telegram_id)
+
     if pos == 1:
         return ['club', 'got_link']
     elif pos == 2:
@@ -13,7 +19,7 @@ def get_position(telegram_id: str) -> list:
         return ['challenger']
 
 
-def get_user_position(telegram_id: str) -> str:
+def get_user_position(telegram_id: str, phone: str = '') -> str:
     """
     TODO запросить в каком списке находится пользователь вернуть строкой позицию
     примерный выбор
@@ -23,7 +29,7 @@ def get_user_position(telegram_id: str) -> str:
         wait_list:  не в клубе зарегистрирован не оплачено
         challenger: в клубе не был в списке нет
     """
-    position: list = get_position(telegram_id)
+    position: list = get_position(telegram_id, phone)
     return '_'.join(position)
 
 
