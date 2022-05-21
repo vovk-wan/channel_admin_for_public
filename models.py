@@ -1,13 +1,28 @@
 # import datetime
+from dataclasses import dataclass
 import os
 from typing import Any, List, Tuple
 
-from peewee import (
-    CharField, BooleanField, IntegerField
-)
+from peewee import (CharField, BooleanField, IntegerField, TextField, ForeignKeyField)
 from peewee import Model
 
 from config import logger, db, db_file_name
+
+
+@dataclass(frozen=True)
+class SourceData:
+    waiting_list: str = 'waiting_list'
+    club: str = 'club'
+
+
+@dataclass(frozen=True)
+class Statuses:
+    challenger: str = 'challenger'
+    waiting: str = 'waiting'
+    entered: str = 'entered'
+    returned: str = 'returned'
+    excluded: str = 'excluded'
+    # got_invite: str = 'got_invite'
 
 
 class BaseModel(Model):
