@@ -294,6 +294,19 @@ class User(BaseModel):
 
     @classmethod
     @logger.catch
+    def exclude_user_by_getcourse_id(cls: 'User', getcourse_id: List[Any]) -> int:
+        """
+        FIXME заменить на изменение статуса
+        exclude user by getcourse id
+        """
+        return (
+          cls.update({cls.member: False, cls.status: Statuses.excluded, cls.status_updated: True}).
+          where(cls.getcourse_id.not_in(getcourse_id)).
+          where(cls.member == True).execute()
+        )
+
+    @classmethod
+    @logger.catch
     def delete_user_by_getcourse_id(cls: 'User', getcourse_id: List[Any]) -> int:
         """
         delete user by getcourse id
