@@ -60,6 +60,7 @@ def get_data_id_from_api(group_id: str) -> int:
 @logger.catch
 async def get_data_from_api(data_id: int) -> list:
     """
+    FIXME получать данные с разных групп
     Получает данные пользователей с активной подпиской от API
     :param data_id: id файла сформированного API
     :return: список пользователей
@@ -78,6 +79,7 @@ async def get_data_from_api(data_id: int) -> list:
 @logger.catch
 async def channel_kick_users(data: list, channel_id: str) -> None:
     """
+    FIXME test
     Удаляет пользователей с окончившейся подпиской из канала.
     Меняет статус пользователей на исключен
     :param data: список пользователей полученных от API.
@@ -113,6 +115,7 @@ async def channel_kick_users(data: list, channel_id: str) -> None:
 async def channel_kick_hackers(
         all_members: Dict[int, dict], all_users: List[str], channel_id: str) -> None:
     """
+    FIXME удалять тех кто не в клубе то есть отсутствующих в базе и статус не в клубе
     Удаляет пользователей телеграм ид которых нет в базе из канала
     :param all_members: словарь членов канала где ключ telegram id
     значение словарь с  подробной информацией
