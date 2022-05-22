@@ -150,7 +150,7 @@ class User(BaseModel):
     getcourse_id = CharField(
         default=None, null=True, unique=True, verbose_name="id пользователя в getcourse")
     phone = CharField(unique=True, verbose_name="id пользователя в телеграмм")
-    telegram_id = CharField(
+    telegram_id = BigIntegerField(
         unique=True, default=None, null=True, verbose_name="id пользователя в телеграмм")
     admin = BooleanField(default=False, verbose_name="Администраторство")
     # -------------- update

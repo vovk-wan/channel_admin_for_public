@@ -55,11 +55,19 @@ def inline_button_start() -> InlineKeyboardButton:
 
 
 @logger.catch
-def inline_button_link() -> InlineKeyboardButton:
+def inline_button_invite_link() -> InlineKeyboardButton:
     """Возвращает кнопку с инвайт ссылкой"""
 
     return InlineKeyboardButton(
         text='Получить ссылку', callback_data='start', url='https://google.ru')
+
+
+@logger.catch
+def inline_button_link_wait_list() -> InlineKeyboardButton:
+    """Возвращает кнопку с инвайт ссылкой"""
+
+    return InlineKeyboardButton(
+        text='Ссылка на лист ожидания ', callback_data='start', url='https://yandex.ru')
 
 # ***** end inline buttons ****************
 
@@ -103,7 +111,7 @@ def paid_() -> InlineKeyboardMarkup:
 
 
 @logger.catch
-def club_not_paid_() -> InlineKeyboardMarkup:
+def excluded_() -> InlineKeyboardMarkup:
 
     return InlineKeyboardMarkup(row_width=2).add(
             inline_button_start(),
@@ -124,12 +132,21 @@ def link_() -> InlineKeyboardMarkup:
 
     return InlineKeyboardMarkup(row_width=2).add(
             inline_button_start(),
-            inline_button_link(),
+            inline_button_invite_link(),
     )
 
 
 @logger.catch
-def challenger_() -> ReplyKeyboardMarkup:
+def challenger_() -> InlineKeyboardMarkup:
+
+    return InlineKeyboardMarkup(row_width=2).add(
+            inline_button_start(),
+            inline_button_link_wait_list(),
+    )
+
+
+@logger.catch
+def not_in_base_() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(
         button_contact(),
         button_start(),
