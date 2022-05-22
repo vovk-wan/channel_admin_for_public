@@ -5,17 +5,14 @@ from dataclasses import dataclass
 
 import aiogram
 from aiogram.dispatcher.filters import Text
-from aiogram.types import (Message, CallbackQuery, InlineKeyboardMarkup,
-                           InlineKeyboardButton, ReplyKeyboardRemove,
-                           ReplyKeyboardMarkup, KeyboardButton)
-from aiogram.types.chat import ChatInviteLink, Chat
+from aiogram.types import (Message, CallbackQuery, InlineKeyboardMarkup, ReplyKeyboardMarkup)
+from aiogram.types.chat import ChatInviteLink
 
 from aiogram.dispatcher import FSMContext
-
-from keyboard import cancel_keyboard
-from config import logger, Dispatcher, bot, EMOJI, admins_list, LINK_EXPIRATION_TIME
-from models import User, Group, Channel
-from states import UserState, AdminState, MenyState
+import aiogram.utils.exceptions
+from config import logger, Dispatcher, bot, EMOJI, LINK_EXPIRATION_TIME
+from models import User
+from states import  MenuState
 from keyboards import user_menu
 from handlers import utils
 
@@ -35,42 +32,45 @@ class Texts:
     )
 
     # Текст о клубе
-    about: str = 'Text about club'
+    about: str = 'Текст о клубе'
 
-    # Прайс
-    prices: str = 'prices'
+    # Текст Прайс
+    prices: str = 'Текст Прайс'
 
     # Отзывы
-    reviews: str = 'reviewers'
+    reviews: str = 'Отзывы'
 
-    # Текст после хочу в клуб если не оплатил и первый раз в клубе или нет в базе телеграм ид
+    # Текст после хочу в клуб если нет в базе телеграм ид
+    not_in_base: str = (
+        'Текст после хочу в клуб если нет в базе телеграм ид'
+    )
+
+    # Текст после хочу в клуб если не оплатил и первый раз в клубе, но нет в листе ожидания
     challenger: str = (
-        'Text when a person is in the club for the first time and is already on the waiting list, '
-        'but the course has not been paid'
+        'Текст после хочу в клуб если не оплатил и первый раз в клубе, но нет в листе ожидания'
     )
 
     # Текст после хочу в клуб если оплатил в клубе и не получал ссылку
-    club_not_got_link: str = 'Text when the person was already in the club and the course was paid'
+    club_not_got_link: str = 'Текст после хочу в клуб если оплатил в клубе и не получал ссылку'
 
     # Текст после хочу в клуб уже оплатил уже в клубе но получал ссылку
     club_got_link: str = (
-        'Text when the person was already in the club and the course was paid'
+        'Текст после хочу в клуб уже оплатил уже в клубе но получал ссылку'
     )
 
-    # Текст после хочу в клуб если не оплатил но уже в клубе
-    club_not_paid: str = (
-        'Text when a person has already been in the club and is already on the waiting list, '
-        'but the course has not been paid'
+    # Текст после хочу в клуб если не оплатил, но был уже в клубе
+    excluded: str = (
+        'Текст после хочу в клуб если не оплатил но уже был в клубе'
     )
 
-    # Текст после отправки заявки в клуб  TODO В группе лист ожидания?
+    # Текст если есть в листе ожидания  TODO В группе лист ожидания?
     wait_list: str = (
-        'Text when the person applied to join the club'
+        'Текст если есть в листе ожидания'
     )
 
     # Текст меню администратора
     admin_menu: str = (
-        'Text when the person applied to join the club'
+        'Текст меню администратора'
     )
 
     @classmethod
@@ -93,10 +93,11 @@ class Keyboard:
     club_not_got_link: InlineKeyboardMarkup = user_menu.link_()
     club_got_link: InlineKeyboardMarkup = InlineKeyboardMarkup(row_width=1).add(
                                                                 user_menu.inline_button_start())
-    club_not_paid: InlineKeyboardMarkup = user_menu.club_not_paid_()
+    excluded: InlineKeyboardMarkup = user_menu.excluded_()
     wait_list: ReplyKeyboardMarkup = InlineKeyboardMarkup(row_width=1).add(
                                                                 user_menu.inline_button_start())
     challenger: ReplyKeyboardMarkup = user_menu.challenger_()
+    not_in_base: ReplyKeyboardMarkup = user_menu.not_in_base_()
 
     @classmethod
     def get_menu_keyboard(cls, name: str):
@@ -125,7 +126,7 @@ async def start_handler(message: Message, state: FSMContext) -> None:
     """
     text = Texts.start
     chat_id = message.chat.id
-    await state.set_state(MenyState.start)
+    await state.set_state(MenuState.start)
     await message.delete()
     data = await state.get_data()
     contact_message = data.get('contact_message')
@@ -172,15 +173,14 @@ async def menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
     text = Texts.get_menu_text(name_state)
     keyboard = Keyboard.get_menu_keyboard(name_state)
 
-    await state.set_state(MenyState.get_state(callback.data))
+    await state.set_state(MenuState.get_state(callback.data))
 
     start_message = data.get('start_message')
     if not start_message:
         # TODO заполнить проверить все варианты
-        pass
+        logger.debug('menu_handler')
         return
-    if name_state == 'challenger':
-
+    if name_state == 'not_in_base':
         await bot.edit_message_text(
             text='контакт', chat_id=chat_id, message_id=start_message)
         contact_message = await bot.send_message(
@@ -215,29 +215,17 @@ async def add_phone_number(message: Message, state: FSMContext):
         return
     logger.info('Processing of invitation link requests begins :')
 
-    # **** add user *****
     # TODO добавить пользователя
-
-    # user = User.get_user_by_phone(phone[-10:])
-    # user.telegram_id = telegram_id
-    # user.save()
-    pass
-    # **** end add user *****
-
-    new_state = utils.get_user_position(telegram_id)
-    if new_state == 'challenger':
-        new_state = 'start'
-        # TODO заглушка циркуляции
-    await state.set_state(MenyState.get_state(new_state))
+    user = User.add_challenger(telegram_id=telegram_id, phone=phone)
+    new_state = 'start'
+    if user:
+        new_state = utils.get_position(user)
+    await state.set_state(MenuState.get_state(new_state))
     callback = CallbackQuery()
     callback.data = new_state
     callback.message = message
     callback.from_user = message.from_user
     await menu_handler(callback, state)
-        # await message.answer(
-        #     f'{EMOJI.sad} Извините, пользователь с таким телефоном в базе не найден.\n'
-        #     f'Возможно база данных ещё не обновилась', reply_markup=ReplyKeyboardRemove())
-        # return
 
 
 async def get_link(telegram_id: int, channel_id):
@@ -260,7 +248,7 @@ async def get_link(telegram_id: int, channel_id):
 
 
 @logger.catch
-def menu_register_handlers(dp: Dispatcher) -> None:
+def user_menu_register_handlers(dp: Dispatcher) -> None:
     """
     Регистратор для функций данного модуля
     """
@@ -268,10 +256,10 @@ def menu_register_handlers(dp: Dispatcher) -> None:
     dp.register_message_handler(
         start_handler, Text(startswith=["назад"], ignore_case=True), state="*")
     dp.register_callback_query_handler(menu_handler, state=[
-        MenyState.start, MenyState.about, MenyState.challenger, MenyState.club_not_paid,
-        MenyState.club_got_link, MenyState.club_not_got_link, MenyState.want,
-        MenyState.reviews, MenyState.prices
+        MenuState.start, MenuState.about, MenuState.challenger, MenuState.excluded,
+        MenuState.club_got_link, MenuState.club_not_got_link, MenuState.want,
+        MenuState.reviews, MenuState.prices, MenuState.not_in_base, MenuState.wait_list
     ])
     dp.register_message_handler(cancel_handler, commands=['отмена', 'cancel'], state="*")
     dp.register_message_handler(
-        add_phone_number, content_types=['contact'], state=MenyState.want)
+        add_phone_number, content_types=['contact'], state=MenuState.want)

@@ -13,7 +13,7 @@ class AdminState(StatesGroup):
     group_registration = State()
 
 
-class MenyState(StatesGroup):
+class MenuState(StatesGroup):
     """Machine state for menu"""
     start = State()  # основное меню
     about = State()  # нажал "о клубе"
@@ -32,5 +32,5 @@ class MenyState(StatesGroup):
         try:
             return getattr(cls, state)
         except AttributeError as err:
-            logger.info(f'{cls.__qualname__} exception: {err}')
+            logger.info(err)
             return cls.start
