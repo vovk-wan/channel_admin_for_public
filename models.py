@@ -307,19 +307,6 @@ class User(BaseModel):
 
     @classmethod
     @logger.catch
-    def delete_user_by_getcourse_id(cls: 'User', getcourse_id: List[Any]) -> int:
-        """
-        remove user by getcourse id if he was deleted from waiting list
-        """
-        return (
-            cls.delete().
-            where(cls.getcourse_id.not_in(getcourse_id)).
-            where(cls.member == False).
-            where(cls.status == Statuses.waiting).execute()
-                )
-
-    @classmethod
-    @logger.catch
     def get_users_not_admins(cls: 'User') -> list:
         """
         return list of telegram ids for active users without admins
@@ -333,22 +320,6 @@ class User(BaseModel):
 
     @classmethod
     @logger.catch
-    def get_all_users(cls: 'User') -> dict:
-        """
-        returns dict of all users
-        return: dict
-        """
-        return {
-            user.telegram_id: (
-                f'{user.getcourse_id} | '
-                f'{"Admin" if user.admin else "Not admin"} | '
-                f'\nID: {user.telegram_id if user.telegram_id else "ЧТО ТО СЛОМАЛОСЬ"} | '
-                )
-            for user in User.select().execute()
-        }
-
-    @classmethod
-    @logger.catch
     def set_user_status_admin(cls: 'User', telegram_id: str) -> bool:
         """
         set admin value enabled for user
@@ -358,7 +329,7 @@ class User(BaseModel):
 
     @classmethod
     @logger.catch
-    def delete_status_admin(cls: 'User', telegram_id: str) -> bool:
+    def delete_status_admin(cls: 'User', telegram_id: str) -> int:
         """
         set admin value enabled for user
         return: 1 if good otherwise 0
