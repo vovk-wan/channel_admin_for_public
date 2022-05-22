@@ -178,7 +178,7 @@ class User(BaseModel):
 
     @classmethod
     @logger.catch
-    def get_users_by_telegram_id(cls: 'User', telegram_id: str) -> 'User':
+    def get_users_by_telegram_id(cls: 'User', telegram_id: int) -> 'User':
         """
         Returns User`s class instance if user with telegram_id in database else None
         return: User
@@ -212,7 +212,7 @@ class User(BaseModel):
     @classmethod
     @logger.catch
     def update_users_from_club(
-            cls: 'User', getcourse_id: str, phone: str, telegram_id: str = None) -> 'User':
+            cls: 'User', getcourse_id: str, phone: str) -> 'User':
         """
         FIXME добавлять или обновлять статус
         if the user is already in the database, returns None
@@ -221,7 +221,7 @@ class User(BaseModel):
         telegram_id: str
         return: str
         """
-        user = cls.get_user_by_phone(phone=phone)
+        user = cls.get_user_by_phone(phone=phone[-10:])
         if user:
             if not user.member:
                 new_status = Statuses.returned if user.status == Statuses.excluded else Statuses.entered
@@ -229,10 +229,11 @@ class User(BaseModel):
                 user.member = True
                 user.status = new_status
                 user.status_updated = True
-                return user.save()
+                user.save()
+                return user
         else:
             result = cls.create(
-                            getcourse_id=getcourse_id, telegram_id=telegram_id, phone=phone,
+                            getcourse_id=getcourse_id, phone=phone,
                             member=True, status=Statuses.entered
                         )
             return result
@@ -266,7 +267,7 @@ class User(BaseModel):
     @classmethod
     @logger.catch
     def add_challenger(
-            cls: 'User', phone: str, telegram_id: str = None) -> 'User':
+            cls: 'User', phone: str, telegram_id: int) -> 'User':
         """
             function for added challenger
         """
