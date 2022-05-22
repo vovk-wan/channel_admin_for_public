@@ -28,9 +28,9 @@ def make_groups_list() -> Tuple:
 
         # записываем в json
         # TODO или добавить параметр, или удалить
-        with open(GROUPS_FILE, 'w', encoding='utf8') as file_save:
-            json.dump(data, file_save, ensure_ascii=False, indent=4)
-        # TODO end или добавить параметр, или удалить
+        # with open(GROUPS_FILE, 'w', encoding='utf8') as file_save:
+        #     json.dump(data, file_save, ensure_ascii=False, indent=4)
+        # # TODO end или добавить параметр, или удалить
     except Exception as exc:
         logger.error(f'{exc.__traceback__.tb_frame}\n{exc}')
         return tuple()
@@ -101,8 +101,8 @@ async def get_data(export_id: int, count_limit: int) -> Dict:
 
             # записываем в json
             # TODO или добавить параметр, или удалить
-            with open(PERSONS_FILE, 'w', encoding='utf8') as file_save:
-                json.dump(data, file_save, ensure_ascii=False, indent=4)
+            # with open(PERSONS_FILE, 'w', encoding='utf8') as file_save:
+            #     json.dump(data, file_save, ensure_ascii=False, indent=4)
             # TODO end или добавить параметр, или удалить
         except Exception as exc:
             logger.error(f'{exc.__traceback__.tb_frame}\n{exc}')
@@ -138,3 +138,7 @@ def make_user_list_test(x=1) -> Tuple:
     if x:
         return x, datetime.datetime.utcnow()
     return tuple()
+
+
+# make_groups_list()
+
