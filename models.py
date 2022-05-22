@@ -271,6 +271,11 @@ class User(BaseModel):
         """
             function for added challenger
         """
+        user = cls.get_user_by_phone(phone=phone[-10:])
+        if user:
+            user.telegram_id = telegram_id
+            user.save()
+            return user
         result = cls.create(
             telegram_id=telegram_id, phone=phone, member=False,
             status=Statuses.challenger, status_updated=True
