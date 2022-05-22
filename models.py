@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import os
 from typing import Any, List, Tuple
 
-from peewee import (CharField, BooleanField, IntegerField, TextField, ForeignKeyField)
+from peewee import (CharField, BooleanField, IntegerField, TextField, ForeignKeyField, BigIntegerField)
 from peewee import Model
 
 from config import logger, db, db_file_name
