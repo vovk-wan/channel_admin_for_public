@@ -2,6 +2,10 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from config import logger
 
 
+def get_state_name(state: State):
+    return state.state.split(':')[-1]
+
+
 class UserState(StatesGroup):
     """Машина состояний для управления пользователями."""
     wait_telephone_number = State()
