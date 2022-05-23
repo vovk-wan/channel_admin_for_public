@@ -13,8 +13,30 @@ class UserState(StatesGroup):
 
 class AdminState(StatesGroup):
     """Машина состояний для администратора."""
-    channel_registration = State()
-    group_registration = State()
+    # стартовое меню администратора
+    start_admin = State(state='start_admin')
+    # смена группы для листа ожидания
+    waiting_group = State(state='waiting_group')
+    # смена группы для членов группы
+    club_group = State(state='club_group')
+    # запись в баз новой группы
+    edit_group = State(state='group_registration')
+    # меню смены каналов
+    edit_channel_list = State(state='edit_channel_list')
+    # добавить канал
+    add_channel = State(state='add_channel')
+    # меню рассылки оплаты по листу ожидания
+    mailing_list = State(state='mailing_list')
+    # вернутся в пользовательское меню
+    exit = State(state='exit')
+
+    @classmethod
+    def get_state_by_name(cls, state: str):
+        try:
+            return getattr(cls, state)
+        except AttributeError as err:
+            logger.info(err)
+            return cls.start_admin
 
 
 class MenuState(StatesGroup):
