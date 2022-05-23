@@ -278,7 +278,7 @@ class User(BaseModel):
         """
         user = cls.get_user_by_phone(phone=phone)
         if user:
-            if not user.member and user.status != Statuses.waiting:
+            if not user.status in [Statuses.entered, Statuses.returned] and user.status != Statuses.waiting:
                 user.getcourse_id = getcourse_id
                 user.member = False
                 user.status = Statuses.waiting
