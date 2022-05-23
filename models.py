@@ -349,7 +349,7 @@ class User(BaseModel):
 
     @classmethod
     @logger.catch
-    def set_user_status_admin(cls: 'User', telegram_id: str) -> bool:
+    def set_user_status_admin(cls: 'User', telegram_id: int) -> bool:
         """
         set admin value enabled for user
         return: 1 if good otherwise 0
@@ -358,7 +358,7 @@ class User(BaseModel):
 
     @classmethod
     @logger.catch
-    def delete_status_admin(cls: 'User', telegram_id: str) -> int:
+    def delete_status_admin(cls: 'User', telegram_id: int) -> int:
         """
         set admin value enabled for user
         return: 1 if good otherwise 0
@@ -367,7 +367,7 @@ class User(BaseModel):
 
     @classmethod
     @logger.catch
-    def is_admin(cls: 'User', telegram_id: str) -> bool:
+    def is_admin(cls: 'User', telegram_id: int) -> bool:
         """
         checks if the user is an administrator
         return: bool
