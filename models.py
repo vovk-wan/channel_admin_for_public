@@ -42,6 +42,50 @@ class Text(BaseModel):
         db_table = "text_messages"
 
 
+class GetcourseGroup(BaseModel):
+    waiting_group_id = CharField(default='0', verbose_name='id группы лист ожидания')
+    club_group_id = CharField(default='0', verbose_name='id группы члены клуба')
+
+    class Meta:
+        db_table = "group_get_course"
+
+    @classmethod
+    @logger.catch
+    def edit_waiting_group(cls, waiting_group_id: str):
+        """Функция изменения id группы листа ожидания """
+        data = cls.select().first()
+        club_group_id = 0
+        if data:
+            club_group_id = data.club_group_id
+        cls.delete().execute()
+        return cls.create(waiting_group_id=waiting_group_id, club_group_id=club_group_id).save()
+
+    @classmethod
+    @logger.catch
+    def edit_club_group(cls, club_group_id: int):
+        """Функция изменения id группы членов клуба """
+        data = cls.select().first()
+        waiting_group_id = 0
+        if data:
+            waiting_group_id = data.waiting_group_id
+        cls.delete().execute()
+        return cls.create(waiting_group_id=waiting_group_id, club_group_id=club_group_id).save()
+
+    @classmethod
+    @logger.catch
+    def get_waiting_group(cls) -> str:
+        """Функция возвращает id канала """
+        waiting_group: cls = cls.select().first()
+        return waiting_group.waiting_group_id if waiting_group else ''
+
+    @classmethod
+    @logger.catch
+    def get_club_group(cls) -> str:
+        """Функция возвращает id группы членов клуба """
+        club_group: cls = cls.select().first()
+        return club_group.club_group_id if club_group else ''
+
+
 class Channel(BaseModel):
     channel_id = CharField(default='0', verbose_name='id канала')
     group_id = CharField(default='0', verbose_name='id канала')
