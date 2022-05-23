@@ -64,9 +64,14 @@ class Texts:
         'Текст после хочу в клуб если не оплатил но уже был в клубе'
     )
 
-    # Текст если есть в листе ожидания  TODO В группе лист ожидания?
+    # Текст если есть в листе ожидания
     wait_list: str = (
         'Текст если есть в листе ожидания'
+    )
+
+    # Текст сопровождение со ссылкой
+    get_invite_link: str = (
+        'Текст сопровождение с invite ссылкой'
     )
 
     # Текст меню администратора
@@ -99,6 +104,7 @@ class Keyboard:
                                                                 user_menu.inline_button_start())
     challenger: ReplyKeyboardMarkup = user_menu.challenger_()
     not_in_base: ReplyKeyboardMarkup = user_menu.not_in_base_()
+    get_invite_link: ReplyKeyboardMarkup = user_menu.not_in_base_()
 
     @classmethod
     def get_menu_keyboard(cls, name: str):
@@ -183,12 +189,12 @@ async def menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
     text = Texts.get_menu_text(name_state)
     keyboard = Keyboard.get_menu_keyboard(name_state)
 
-    await state.set_state(MenuState.get_state(callback.data))
+    await state.set_state(MenuState.get_state_by_name(callback.data))
 
     start_message = data.get('start_message')
     if not start_message:
         # TODO заполнить проверить все варианты
-        logger.debug('menu_handler')
+        logger.debug('deleted start menu')
         return
     if name_state == 'not_in_base':
         await bot.edit_message_text(
@@ -241,7 +247,7 @@ async def add_phone_number(message: Message, state: FSMContext):
     new_state = 'start'
     if user:
         new_state = utils.get_position(user)
-    await state.set_state(MenuState.get_state(new_state))
+    await state.set_state(MenuState.get_state_by_name(new_state))
     callback = CallbackQuery()
     callback.data = new_state
     callback.message = message
