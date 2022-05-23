@@ -55,7 +55,7 @@ class MenuState(StatesGroup):
     get_invite_link = State(state='get_invite_link')  # получить ссылку
 
     @classmethod
-    def get_state(cls, state: str):
+    def get_state_by_name(cls, state: str):
         try:
             return getattr(cls, state)
         except AttributeError as err:
