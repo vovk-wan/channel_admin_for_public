@@ -10,11 +10,12 @@ from aiogram.types.chat import ChatInviteLink
 
 from aiogram.dispatcher import FSMContext
 import aiogram.utils.exceptions
-from config import logger, Dispatcher, bot, EMOJI, LINK_EXPIRATION_TIME
-from models import User
-from states import  MenuState
+from config import logger, Dispatcher, bot, EMOJI, LINK_EXPIRATION_TIME, admins_list
+from models import User, Channel
+from states import MenuState, AdminState, get_state_name
 from keyboards import user_menu
 from handlers import utils
+from handlers.admin_menu import admin_menu_handler
 
 
 @dataclass
@@ -161,14 +162,23 @@ async def menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
     telegram_id = callback.from_user.id
     chat_id = callback.message.chat.id
     data = await state.get_data()
+
     contact_message = data.get('contact_message')
     if contact_message:
         await bot.delete_message(chat_id=chat_id, message_id=contact_message)
         data.pop('contact_message')
         await state.set_data(data)
+
     name_state = callback.data
+
     if name_state == 'want':
         name_state = utils.get_user_position(telegram_id)
+
+    if name_state == 'about' and str(telegram_id) in admins_list:
+        await state.set_state(AdminState.start_admin)
+        callback.data = get_state_name(AdminState.start_admin)
+        await admin_menu_handler(callback=callback, state=state)
+        return
 
     text = Texts.get_menu_text(name_state)
     keyboard = Keyboard.get_menu_keyboard(name_state)
@@ -189,6 +199,17 @@ async def menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
             reply_markup=keyboard
         )
         await state.update_data(contact_message=contact_message.message_id)
+        return
+    elif name_state == 'get_invite_link':
+        channel_id = Channel.get_channel()
+        link = await get_link(telegram_id=telegram_id, channel_id=channel_id)
+        text = f'{text} \n{link}'
+        await bot.edit_message_text(text=text, chat_id=chat_id, message_id=start_message)
+
+        text = Texts.get_menu_text('start')
+        keyboard = Keyboard.get_menu_keyboard('start')
+        start_message = await bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
+        await state.update_data(contact_message=start_message.message_id)
         return
     try:
         await bot.edit_message_text(
