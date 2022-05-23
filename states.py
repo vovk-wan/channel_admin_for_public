@@ -41,17 +41,18 @@ class AdminState(StatesGroup):
 
 class MenuState(StatesGroup):
     """Machine state for menu"""
-    start = State()  # основное меню
-    about = State()  # нажал "о клубе"
-    want = State()  # нажал "хочу в клуб"
-    reviews = State()  # нажал "отзывы"
-    prices = State()  # нажал "Тарифы"
-    club_not_got_link = State()  # в клубе, в основном списке, ссылку не получал
-    club_got_link = State()  # в клубе, в основном списке, ссылку получал
-    excluded = State()  # в клубе был, продление не оплачено
-    wait_list = State()  # не был в клубе, но есть в листе ожидания
-    challenger = State()  # не был в клубе, нет в листе ожидания, есть телеграм ид в базе
-    not_in_base = State()  # не был в клубе, или нет телеграм ид в базе
+    start = State(state='start')  # основное меню
+    about = State(state='about')  # нажал "о клубе"
+    want = State(state='want')  # нажал "хочу в клуб"
+    reviews = State(state='reviews')  # нажал "отзывы"
+    prices = State(state='prices')  # нажал "Тарифы"
+    club_not_got_link = State(state='club_not_got_link')  # в клубе, ссылку не получал
+    club_got_link = State(state='club_got_link')  # в клубе, в основном списке, ссылку получал
+    excluded = State(state='excluded')  # в клубе был, продление не оплачено
+    wait_list = State(state='wait_list')  # не был в клубе, но есть в листе ожидания
+    challenger = State(state='challenger')  # не был в клубе, нет в листе ожидания, есть  базе
+    not_in_base = State(state='not_in_base')  # не был в клубе, или нет телеграм ид в базе
+    get_invite_link = State(state='get_invite_link')  # получить ссылку
 
     @classmethod
     def get_state(cls, state: str):
