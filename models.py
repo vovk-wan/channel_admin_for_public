@@ -250,7 +250,7 @@ class User(BaseModel):
         """
         user = cls.get_user_by_phone(phone=phone[-10:])
         if user:
-            if not user.member:
+            if not user.status in [Statuses.entered, Statuses.returned]:
                 new_status = Statuses.returned if user.status == Statuses.excluded else Statuses.entered
                 user.getcourse_id = getcourse_id
                 user.member = True
