@@ -26,3 +26,11 @@ def admin_menu() -> InlineKeyboardMarkup:
             InlineKeyboardButton(text='Назад', callback_data='start_admin'),
             InlineKeyboardButton(text='Выход', callback_data='user_menu'),
     )
+
+
+@logger.catch
+def add_channel() -> InlineKeyboardMarkup:
+
+    return InlineKeyboardMarkup(row_width=1).add(
+            InlineKeyboardButton(text='Отмена', callback_data='edit_channel_list')
+    )
