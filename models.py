@@ -395,7 +395,7 @@ def recreate_db(_db_file_name: str) -> None:
     with db:
         if os.path.exists(_db_file_name):
             drop_db()
-        db.create_tables([User, Channel, Group, UserStatus, Text], safe=True)
+        db.create_tables([User, Channel, Group, GetcourseGroup, UserStatus, Text], safe=True)
         logger.info('DB Recreated')
 
 
