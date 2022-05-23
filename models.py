@@ -199,7 +199,7 @@ class User(BaseModel):
         exclude_users = (
             cls.select().
             where(cls.getcourse_id.not_in(getcourse_id)).
-            where(cls.member == True).execute()
+            where(cls.status.in_([Statuses.entered, Statuses.returned])).execute()
         )
         return tuple(user.telegram_id for user in exclude_users if user.telegram_id)
 
