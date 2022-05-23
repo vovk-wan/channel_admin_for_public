@@ -329,7 +329,7 @@ class User(BaseModel):
         return (
           cls.update({cls.member: False, cls.status: Statuses.excluded, cls.status_updated: True}).
           where(cls.getcourse_id.not_in(getcourse_id)).
-          where(cls.member == True).execute()
+          where(cls.status.in_([Statuses.entered, Statuses.returned])).execute()
         )
 
     @classmethod
