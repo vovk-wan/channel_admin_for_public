@@ -59,7 +59,7 @@ def inline_button_invite_link() -> InlineKeyboardButton:
     """Возвращает кнопку с инвайт ссылкой"""
 
     return InlineKeyboardButton(
-        text='Получить ссылку', callback_data='start', url='https://google.ru')
+        text='Получить ссылку', callback_data='get_invite_link')
 
 
 @logger.catch
