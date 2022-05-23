@@ -87,47 +87,30 @@ class GetcourseGroup(BaseModel):
 
 
 class Channel(BaseModel):
-    channel_id = CharField(default='0', verbose_name='id канала')
-    group_id = CharField(default='0', verbose_name='id канала')
+    name = CharField(default='', verbose_name='id канала')
+    channel_id = BigIntegerField(unique=True, verbose_name='id канала')
 
     class Meta:
-        db_table = "channel"
+        db_table = "channels"
 
     @classmethod
     @logger.catch
-    def edit_channel(cls, channel_id: int):
-        """Функция изменения id канала """
-        data = cls.select().first()
-        group_id = 0
-        if data:
-            group_id = data.group_id
-        cls.delete().execute()
-        return cls.create(channel_id=channel_id, group_id=group_id).save()
+    def add_channel(cls, channel_id: int, channel_name: str):
+        """Функция добавления канала """
+        return cls.get_or_create(channel_id=channel_id, name=channel_name)
 
     @classmethod
     @logger.catch
-    def edit_group(cls, group_id: int):
-        """Функция изменения id группы """
-        data = cls.select().first()
-        channel_id = 0
-        if data:
-            channel_id = data.channel_id
-        cls.delete().execute()
-        return cls.create(channel_id=channel_id, group_id=group_id).save()
+    def get_channels(cls) -> list:
+        """Функция возвращает список каналов"""
+        channel = [chanel for chanel in cls.select().execute()]
+        return channel if channel else []
 
     @classmethod
     @logger.catch
-    def get_channel(cls) -> str:
-        """Функция возвращает id канала """
-        channel = cls.select().first()
-        return channel.channel_id if channel else ''
-
-    @classmethod
-    @logger.catch
-    def get_group(cls) -> str:
-        """Функция возвращает id группы """
-        group = cls.select().first()
-        return group.group_id if group else ''
+    def delete_channel(cls, channel_id: int) -> int:
+        """Функция удаляет канал """
+        return cls.delete().where(cls.channel_id == channel_id)
 
 
 class Group(BaseModel):
