@@ -110,7 +110,7 @@ class Channel(BaseModel):
     @logger.catch
     def delete_channel(cls, channel_id: int) -> int:
         """Функция удаляет канал """
-        return cls.delete().where(cls.channel_id == channel_id)
+        return cls.delete().where(cls.channel_id == channel_id).execute()
 
 
 class Group(BaseModel):
@@ -230,10 +230,10 @@ class User(BaseModel):
         count = 0
         if source == SourceData.club:
             for user in users:
-                count += bool(cls.update_users_from_club(**user, source=source))
+                count += bool(cls.update_users_from_club(**user))
         elif source == SourceData.waiting_list:
             for user in users:
-                count += bool(cls.update_users_from_waiting_list(**user, source=source))
+                count += bool(cls.update_users_from_waiting_list(**user))
         return count
 
     @classmethod
@@ -277,7 +277,15 @@ class User(BaseModel):
         return: str
         """
         user = cls.get_user_by_phone(phone=phone)
+        user_by_id = cls.select().where(cls.getcourse_id == getcourse_id).first()
         if user:
+            if not user.status in [Statuses.entered, Statuses.returned] and user.status != Statuses.waiting:
+                user.getcourse_id = getcourse_id
+                user.member = False
+                user.status = Statuses.waiting
+                user.status_updated = True
+                return user.save()
+        elif user_by_id:
             if not user.status in [Statuses.entered, Statuses.returned] and user.status != Statuses.waiting:
                 user.getcourse_id = getcourse_id
                 user.member = False
@@ -286,9 +294,9 @@ class User(BaseModel):
                 return user.save()
         else:
             result = cls.create(
-                            getcourse_id=getcourse_id, telegram_id=telegram_id, phone=phone,
-                            member=False, status=Statuses.waiting, status_updated=True
-                        )
+                getcourse_id=getcourse_id, telegram_id=telegram_id, phone=phone,
+                member=False, status=Statuses.waiting, status_updated=True
+            )
             return result
 
     @classmethod

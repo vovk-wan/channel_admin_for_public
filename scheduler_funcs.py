@@ -9,7 +9,7 @@ from aiogram.types.chat import Chat
 from config import bot, logger, EMOJI, REQUEST_LIMIT, REQUEST_RATE, KICK_RATE, admins_list
 from get_channel_info import get_channel_data
 from getcourse_requests import get_data, make_user_list_by_group, make_groups_list
-from models import User, Channel, Group, Statuses, SourceData
+from models import User, Channel, Group, Statuses, SourceData, GetcourseGroup
 
 
 @logger.catch
@@ -58,14 +58,14 @@ def get_data_id_from_api(group_id: str) -> int:
 
 
 @logger.catch
-async def get_data_from_api(data_id: int) -> list:
+async def get_data_from_api(data_id: int, source: str) -> list:
     """
-    FIXME получать данные с разных групп
     Получает данные пользователей с активной подпиской от API
     :param data_id: id файла сформированного API
+    :param source:
     :return: список пользователей
     """
-    data = await get_data(data_id, REQUEST_LIMIT)
+    data = await get_data(data_id, REQUEST_LIMIT, group_name=source)
     if data.get('error', True):
         logger.info(f'Data not received\n work stopped ')
         return []
@@ -77,7 +77,7 @@ async def get_data_from_api(data_id: int) -> list:
 
 
 @logger.catch
-async def channel_kick_users(data: list, channel_id: str) -> None:
+async def channel_exclude_users(data: list, channels: list) -> None:
     """
     FIXME test
     Удаляет пользователей с окончившейся подпиской из канала.
@@ -89,21 +89,25 @@ async def channel_kick_users(data: list, channel_id: str) -> None:
     getcourse_id = tuple(user.get('getcourse_id', None) for user in data)
     list_for_exclude = User.get_list_users_for_exclude(getcourse_id=getcourse_id)
     if list_for_exclude:
-        logger.info('List users for kicked received.\n Starting delete users for channel')
-        channel: Chat = await bot.get_chat(channel_id)
-        admins = await channel.get_administrators()
-        admins_id = [str(user.user.id) for user in admins]
-        count = 0
-        for telegram_id in list_for_exclude:
-            if telegram_id and telegram_id not in admins_id:
-                try:
-                    await bot.kick_chat_member(channel_id, int(telegram_id))
-                    count += 1
-                except aiogram.utils.exceptions.BadRequest as err:
-                    logger.error(f'{err.__traceback__.tb_frame}\n{err}')
-        logger.info(
-            f'Removed {count} users from the channel '
-            f'\n list of telegram ids of kicked users: {list_for_exclude}')
+        for channel_data in channels:
+            channel_id = channel_data.channel_id
+
+
+            logger.info('List users for kicked received.\n Starting delete users for channel')
+            channel: Chat = await bot.get_chat(channel_id)
+            admins = await channel.get_administrators()
+            admins_id = [str(user.user.id) for user in admins]
+            count = 0
+            for telegram_id in list_for_exclude:
+                if telegram_id and telegram_id not in admins_id:
+                    try:
+                        await bot.kick_chat_member(channel_id, int(telegram_id))
+                        count += 1
+                    except aiogram.utils.exceptions.BadRequest as err:
+                        logger.error(err)
+            logger.info(
+                f'Removed {count} users from the channel{channel_data.name} '
+                f'\n list of telegram ids of kicked users: {list_for_exclude}')
     else:
         logger.info(f'{EMOJI.like} No users to delete')
     logger.debug('Starting delete users from DB')
@@ -113,7 +117,7 @@ async def channel_kick_users(data: list, channel_id: str) -> None:
 
 @logger.catch
 async def channel_kick_hackers(
-        all_members: Dict[int, dict], all_users: List[str], channel_id: str) -> None:
+        all_members: Dict[int, dict], all_users: List[int], channel_id: str) -> None:
     """
     FIXME удалять тех кто не в клубе то есть отсутствующих в базе и статус не в клубе
     Удаляет пользователей телеграм ид которых нет в базе из канала
@@ -123,16 +127,15 @@ async def channel_kick_hackers(
     :param channel_id: id канала который бот администрирует
     :return:
     """
-    logger.info('Get admins list')
 
     channel: Chat = await bot.get_chat(channel_id)
     admins = await channel.get_administrators()
-    all_users.extend([str(user.user.id) for user in admins])
+    all_users.extend([user.user.id for user in admins])
     all_members_id: List[int] = list(all_members.keys())
 
     list_for_kicked: List[int] = [
         member for member in all_members_id
-        if str(member) not in all_users
+        if member not in all_users
     ]
     if not list_for_kicked:
         logger.info(f' No users to delete')
@@ -160,13 +163,14 @@ async def channel_kick_hackers(
 
 
 @logger.catch
-def add_new_users(data: list) -> int:
+def add_new_users(data: list, source: str) -> int:
     """
     обновляет пользователей
-    :param data:
+    :param data: список пользователей
+    :param source: источник данных
     :return:
     """
-    return User.update_users(data)
+    return User.update_users(users=data, source=source)
 
 
 @logger.catch
@@ -178,8 +182,8 @@ async def channel_maintenance():
 
     logger.info(f'start channel maintenance: start')
 
-    channel_id: str = Channel.get_channel()
-    if not channel_id:
+    channels: list = Channel.get_channels()
+    if not channels:
         await send_message_to_admin('Нет id канала, нужно добавить id канала и выбрать группу.\n'
                                     'воспользуйтесь командой.\n/admin')
 
@@ -188,27 +192,52 @@ async def channel_maintenance():
     edit_group_list()
     logger.info(f'start channel maintenance:  get groups')
 
-    group_id = Channel.get_group()
-    if not group_id:
-        await send_message_to_admin('Нет id группы, нужно выбрать группу.\n'
+    member_group_id = GetcourseGroup.get_club_group()
+    if not member_group_id:
+        await send_message_to_admin('Нет id основной группы, нужно выбрать группу.\n'
                                     'воспользуйтесь командой.\n/admin')
 
-        logger.error(f'start channel maintenance:  not group_id. work stopped ')
+        logger.error(f'start channel maintenance:  not member_group_id. work stopped ')
         return
-    logger.info(f'start channel maintenance:  get data')
-    data_id = get_data_id_from_api(group_id)
+
+    logger.info(f'start channel maintenance: club group  get data')
+    data_id = get_data_id_from_api(member_group_id)
     if not data_id:
-        logger.error(f'start channel maintenance:  not data_id. work stopped ')
+        logger.error(f'start channel maintenance:  not data_id. club group work stopped ')
         return
-    data = await get_data_from_api(data_id)
+    data = await get_data_from_api(data_id, SourceData.club)
 
     if not data:
-        logger.error(f'start channel maintenance:  not user list. work stopped ')
+        logger.error(f'start channel maintenance:  not user list. club group work stopped ')
         return
-    logger.info(f'start channel maintenance: group')
-    await channel_kick_users(data, channel_id)
-    count = add_new_users(data)
-    logger.info(f'{count} users updated to BD')
+    logger.info(f'start channel maintenance: club group')
+    await channel_exclude_users(data, channels)
+    count = add_new_users(data, SourceData.club)
+    logger.info(f'{count} users updated to BD club group')
+
+    waiting_group_id = GetcourseGroup.get_waiting_group()
+    if not waiting_group_id:
+        await send_message_to_admin('Нет id группы листа ожидания, нужно выбрать группу.\n'
+                                    'воспользуйтесь командой.\n/admin')
+
+        logger.error(f'start channel maintenance:  not waiting_group_id. work stopped ')
+        return
+    logger.info(f'start channel maintenance:  get data waiting list')
+    data_id = get_data_id_from_api(waiting_group_id)
+    if not data_id:
+        logger.error(f'start channel maintenance:  not data_id.  waiting list work stopped ')
+        return
+    data = await get_data_from_api(data_id, SourceData.waiting_list)
+
+    if not data:
+        logger.error(f'start channel maintenance:  not user list.  waiting list work stopped ')
+        return
+
+    count = add_new_users(data, SourceData.waiting_list)
+    logger.info(f'{count} users updated to BD waiting list group')
+    # getcourse_id = tuple(user.get('getcourse_id', None) for user in data)
+    # count = User.exclude_user_by_getcourse_id(list(getcourse_id))
+    # logger.info(f'{count}  users get status excluded')
 
 
 async def kick_hackers():
@@ -218,28 +247,32 @@ async def kick_hackers():
     кроме администраторов канала
     """
     logger.info(f'start kick_hackers: {datetime.datetime.utcnow()}')
-    channel_id: str = Channel.get_channel()
-    if not channel_id:
+    channels: list = Channel.get_channels()
+    if not channels:
         logger.info('scheduler_func.kick_hackers: No channel')
         return
-    all_users: List[str] = User.get_users_not_admins()
 
-    try:
-        logger.info(f' try get_channel_data: {datetime.datetime.utcnow()}')
-        all_members: Dict = await get_channel_data(channel_id[4:])
+    all_users: List[int] = User.get_users_not_admins()
+    for channel_data in channels:
+        channel_id = channel_data.channel_id
+        try:
+            logger.info(f' try get_channel_data: {datetime.datetime.utcnow()}')
+            logger.info('Get admins list')
 
-        await channel_kick_hackers(
-            all_members=all_members, all_users=all_users, channel_id=channel_id)
+            all_members: Dict = await get_channel_data(str(channel_id)[4:])
 
-    except Exception as err:
-        logger.error(f'{err.__traceback__.tb_frame}\n{err}')
+            await channel_kick_hackers(
+                all_members=all_members, all_users=all_users, channel_id=channel_id)
+
+        except Exception as err:
+            logger.error(f' cannel name : {channel_data.name} {err}')
     logger.info(f' stop kick hackers: {datetime.datetime.utcnow()}')
 
 
 @logger.catch
 async def check_base():
-    aioschedule.every(REQUEST_RATE).minutes.do(channel_maintenance)
-    aioschedule.every(KICK_RATE).minutes.do(kick_hackers)
+    # aioschedule.every(REQUEST_RATE).minutes.do(channel_maintenance)
+    # aioschedule.every(KICK_RATE).minutes.do(kick_hackers)
     while True:
         await aioschedule.run_pending()
         await asyncio.sleep(1)

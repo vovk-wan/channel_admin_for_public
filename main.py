@@ -11,13 +11,11 @@ import asyncio
 from aiogram import executor
 
 from config import dp, logger, bot, db_file_name, admins_list
-from handlers.admin_menu import admin_menu_register_handlers
-from handlers.user_menu import user_menu_register_handlers
+from handlers.menu import menu_register_handlers
 from models import recreate_db
 from scheduler_funcs import check_base, edit_group_list
 
-user_menu_register_handlers(dp=dp)
-admin_menu_register_handlers(dp=dp)
+menu_register_handlers(dp=dp)
 
 
 @logger.catch
@@ -48,7 +46,7 @@ async def on_startup(_) -> None:
     logger.info('Bot started at:', datetime.datetime.now())
     logger.info("BOT POLLING ONLINE")
     # edit_group_list()  # TODO включить в релизе
-    # asyncio.create_task(check_base())  # TODO включить в релизе
+    asyncio.create_task(check_base())  # TODO включить в релизе
 
 
 @logger.catch

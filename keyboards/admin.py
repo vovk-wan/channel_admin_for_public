@@ -17,15 +17,17 @@ def cancel_keyboard() -> 'ReplyKeyboardMarkup':
 @logger.catch
 def admin_menu() -> InlineKeyboardMarkup:
 
-    return InlineKeyboardMarkup(row_width=3).add(
-            InlineKeyboardButton(text='Каналы/Группы', callback_data='edit_channel_list'),
-            InlineKeyboardButton(text='Геткурс группа', callback_data='club_group'),
-            InlineKeyboardButton(text='Отправить ссылки на оплату', callback_data='mailing_list'),
-            # InlineKeyboardButton(text='Редактировать текст', callback_data='edit_texts'),
-            InlineKeyboardButton(text='Изменить лист ожидания', callback_data='waiting_group'),
-            InlineKeyboardButton(text='Назад', callback_data='start_admin'),
-            InlineKeyboardButton(text='Выход', callback_data='user_menu'),
+    keyboard_menu = InlineKeyboardMarkup(row_width=1)
+
+    keyboard_menu.add(
+        InlineKeyboardButton(text='изменить основную группу', callback_data='club_group'),
+        InlineKeyboardButton(text='Изменить лист ожидания', callback_data='waiting_group'),
+        InlineKeyboardButton(text='Отправить ссылки на оплату', callback_data='mailing_list'),
+        InlineKeyboardButton(text='Каналы/Группы', callback_data='edit_channel_list'),
+        InlineKeyboardButton(text='Выход', callback_data='exit'),
     )
+    # InlineKeyboardButton(text='Редактировать текст', callback_data='edit_texts'),
+    return keyboard_menu
 
 
 @logger.catch

@@ -47,6 +47,7 @@ def make_user_list_by_group(group_id) -> Tuple:
     :param group_id: идентификатор нужной группы.
     :return:
     """
+
     headers = {'content-type': 'multipart/form-data'}
     filter_name = 'status'
     filter_value = 'active'
@@ -69,11 +70,12 @@ def make_user_list_by_group(group_id) -> Tuple:
 
 
 @logger.catch
-async def get_data(export_id: int, count_limit: int) -> Dict:
+async def get_data(export_id: int, count_limit: int, group_name: str) -> Dict:
     """
     Функция получает список пользователей по id созданного на сервере файла экспорта
     :param export_id:
     :param count_limit:
+    :param group_name:
     :return:
     """
 
@@ -101,8 +103,8 @@ async def get_data(export_id: int, count_limit: int) -> Dict:
 
             # записываем в json
             # TODO или добавить параметр, или удалить
-            # with open(PERSONS_FILE, 'w', encoding='utf8') as file_save:
-            #     json.dump(data, file_save, ensure_ascii=False, indent=4)
+            with open(f'{group_name}{PERSONS_FILE}', 'w', encoding='utf8') as file_save:
+                json.dump(data, file_save, ensure_ascii=False, indent=4)
             # TODO end или добавить параметр, или удалить
         except Exception as exc:
             logger.error(f'{exc.__traceback__.tb_frame}\n{exc}')
@@ -138,7 +140,3 @@ def make_user_list_test(x=1) -> Tuple:
     if x:
         return x, datetime.datetime.utcnow()
     return tuple()
-
-
-# make_groups_list()
-
