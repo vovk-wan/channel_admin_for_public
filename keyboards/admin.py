@@ -31,8 +31,16 @@ def admin_menu() -> InlineKeyboardMarkup:
 
 
 @logger.catch
-def add_channel() -> InlineKeyboardMarkup:
+def cancel_edit_channel() -> InlineKeyboardMarkup:
 
     return InlineKeyboardMarkup(row_width=1).add(
             InlineKeyboardButton(text='Отмена', callback_data='edit_channel_list')
+    )
+
+
+@logger.catch
+def cancel() -> InlineKeyboardMarkup:
+
+    return InlineKeyboardMarkup(row_width=1).add(
+            InlineKeyboardButton(text='Отмена', callback_data='about')
     )

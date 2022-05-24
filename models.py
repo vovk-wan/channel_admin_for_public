@@ -1,9 +1,9 @@
-# import datetime
+import datetime
 from dataclasses import dataclass
 import os
 from typing import Any, List, Tuple
 
-from peewee import (CharField, BooleanField, IntegerField, TextField, ForeignKeyField, BigIntegerField)
+from peewee import (CharField, BooleanField, IntegerField, TextField, DateTimeField, BigIntegerField)
 from peewee import Model
 
 from config import logger, db, db_file_name
@@ -22,7 +22,17 @@ class Statuses:
     entered: str = 'entered'
     returned: str = 'returned'
     excluded: str = 'excluded'
-    # got_invite: str = 'got_invite'
+    privileged: str = 'privileged'
+
+
+@dataclass(frozen=True)
+class StateTexts:
+    start: str = 'Тест в основном меню'
+    about: str = 'Текст о клубе'
+    prices: str = 'Текст с ценами'
+    reviews: str = 'Текст с отзывами'
+    goodbye: str = 'Текст goodbye'
+    link_waiting_list: str = 'https://'
 
 
 class BaseModel(Model):
@@ -35,11 +45,63 @@ class BaseModel(Model):
 
 class Text(BaseModel):
     """Class for text message table"""
-    name = CharField(max_length=50, verbose_name='Название сообщения')
-    message = TextField(verbose_name='Текст сообщения')
+    start = TextField(verbose_name='Тест в основном меню')
+    about = TextField(verbose_name='Текст о клубе')
+    prices = TextField(verbose_name='Текст с ценами')
+    reviews = TextField(verbose_name='Текст с отзывами')
+    goodbye = TextField(verbose_name='Текст goodbye')
+    link_waiting_list = CharField(verbose_name='Ссылка на лист ожидания')
 
     class Meta:
         db_table = "text_messages"
+
+    @classmethod
+    @logger.catch
+    def get_start_text(cls):
+        data = cls.select().first()
+        if not data:
+            data = StateTexts
+        return data.start
+
+    @classmethod
+    @logger.catch
+    def get_about_text(cls):
+        data = cls.select().first()
+        if not data:
+            data = StateTexts
+        return data.about
+
+    @classmethod
+    @logger.catch
+    def get_prices_text(cls):
+        data = cls.select().first()
+        if not data:
+            data = StateTexts
+        return data.prices
+
+    @classmethod
+    @logger.catch
+    def get_reviews_text(cls):
+        data = cls.select().first()
+        if not data:
+            data = StateTexts
+        return data.reviews
+
+    @classmethod
+    @logger.catch
+    def get_goodbye_text(cls):
+        data = cls.select().first()
+        if not data:
+            data = StateTexts
+        return data.goodbye
+
+    @classmethod
+    @logger.catch
+    def get_link_waiting_list_text(cls):
+        data = cls.select().first()
+        if not data:
+            data = StateTexts
+        return data.link_waiting_list
 
 
 class GetcourseGroup(BaseModel):
@@ -115,7 +177,7 @@ class Channel(BaseModel):
 
 class Group(BaseModel):
     """Клас для хранения и работы с группами"""
-    id = IntegerField(verbose_name='id группы')
+    id = IntegerField(primary_key=True, verbose_name='id группы')
     name = IntegerField(verbose_name='id канала')
 
     class Meta:
@@ -163,16 +225,6 @@ class UserStatus(BaseModel):
 class User(BaseModel):
     """
     Model for table users
-      methods
-        add_new_user
-        update_users
-        is_admin
-        get_all_users
-        get_user_by_phone
-        get_users_not_admins
-        get_telegram_id_users
-        get_user_by_telegram_id
-        set_user_status_admin
      """
     getcourse_id = CharField(
         default=None, null=True, unique=True, verbose_name="id пользователя в getcourse")
@@ -188,6 +240,8 @@ class User(BaseModel):
     member = BooleanField(default=False, verbose_name='Член клуба')
     # получал инвайт ссылку
     got_invite = BooleanField(default=False, verbose_name='Получал инвайт ссылку')
+    expiration_date = DateTimeField(
+        default=datetime.datetime.now(), verbose_name='Дата окончания привилегии')
 
     class Meta:
         db_table = "users"
@@ -241,7 +295,6 @@ class User(BaseModel):
     def update_users_from_club(
             cls: 'User', getcourse_id: str, phone: str) -> 'User':
         """
-        FIXME добавлять или обновлять статус
         if the user is already in the database, returns None
         if created user will return user id
         nik_name: str
@@ -319,17 +372,6 @@ class User(BaseModel):
 
     @classmethod
     @logger.catch
-    def delete_user_by_telegram_id(cls: 'User', telegram_id: List[Any]) -> int:
-        """
-        delete users by telegram id
-        """
-        return cls.delete().where(cls.telegram_id.in_(telegram_id)).execute()
-        # user = cls.get_or_none(cls.telegram_id.in_(telegram_id))
-        # if user:
-        #     return user.delete_instance()
-
-    @classmethod
-    @logger.catch
     def exclude_user_by_getcourse_id(cls: 'User', getcourse_id: List[Any]) -> int:
         """
         exclude user by getcourse id
@@ -342,6 +384,21 @@ class User(BaseModel):
 
     @classmethod
     @logger.catch
+    def get_users_from_waiting_list(cls: 'User') -> list:
+        """
+        return list of telegram ids for users from waiting list
+        return: list
+        """
+        return [
+            user.telegram_id
+            for user in cls.
+            select().
+            where(cls.status == Statuses.waiting).
+            execute() if user.telegram_id
+        ]
+
+    @classmethod
+    @logger.catch
     def get_users_not_admins(cls: 'User') -> list:
         """
         return list of telegram ids for active users without admins
@@ -350,38 +407,38 @@ class User(BaseModel):
         return [
             user.telegram_id
             for user in cls.select(cls.telegram_id).
-                                    where(cls.admin == False).
-                                    where(cls.status.in_([Statuses.entered, Statuses.returned])).
-                                    execute() if user.telegram_id
+            where(cls.admin == False).
+            where(cls.status.in_([Statuses.entered, Statuses.returned, Statuses.privileged])).
+            execute() if user.telegram_id
         ]
 
     @classmethod
     @logger.catch
-    def set_user_status_admin(cls: 'User', telegram_id: int) -> bool:
+    def add_privileged_status_by_telegram_id(cls: 'User', telegram_id: int) -> bool:
         """
-        set admin value enabled for user
-        return: 1 if good otherwise 0
+            function add privileged user
         """
-        return cls.update(admin=True).where(cls.telegram_id == telegram_id).execute()
+        return (cls.update(status=Statuses.privileged, status_updated=False).
+                where(cls.telegram_id == telegram_id).execute()
+                )
 
     @classmethod
     @logger.catch
-    def delete_status_admin(cls: 'User', telegram_id: int) -> int:
+    def delete_privileged_status_by_telegram_id(cls: 'User', telegram_id: int) -> bool:
         """
-        set admin value enabled for user
-        return: 1 if good otherwise 0
+            function add privileged user
         """
-        return cls.update(admin=False).where(cls.telegram_id == telegram_id).execute()
+        return (cls.update(status=Statuses.privileged, status_updated=False).
+                where(cls.telegram_id == telegram_id).execute()
+                )
 
     @classmethod
     @logger.catch
-    def is_admin(cls: 'User', telegram_id: int) -> bool:
+    def got_invited(cls: 'User', telegram_id: int) -> bool:
         """
-        checks if the user is an administrator
-        return: bool
+            function change data got invited link
         """
-        user = cls.get_or_none(cls.telegram_id == telegram_id)
-        return user.admin if user else False
+        return cls.update(got_invited=True).where(cls.telegram_id == telegram_id).execute()
 
 
 @logger.catch

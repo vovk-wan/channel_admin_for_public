@@ -62,7 +62,7 @@ async def start_menu_handler(message: Message, state: FSMContext) -> None:
         Функция - приветствие
         выводит основное меню и сообщение - основу под все кнопки
     """
-    text = TextsUser.start
+    text = TextsUser.start()
     chat_id = message.chat.id
     await state.set_state(MenuState.start)
     data = await state.get_data()
@@ -111,16 +111,16 @@ async def user_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
     chat_id = callback.message.chat.id
     if name_state == 'want':
         name_state = utils.get_user_position(telegram_id)
-    text = TextsUser.get_menu_text(name_state)
+    text = TextsUser.get_menu_text(name_state)()
     keyboard = Keyboard.get_menu_keyboard(name_state)
 
     await state.set_state(MenuState.get_state_by_name(callback.data))
-
     start_message = data.get('start_message')
     if not start_message:
         # TODO заполнить проверить все варианты
         logger.debug('deleted start menu')
         return
+
     if name_state == 'not_in_base':
         await bot.edit_message_text(
             text='контакт', chat_id=chat_id, message_id=start_message)
@@ -138,7 +138,7 @@ async def user_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
         text = f'{text} \n{links_str}'
         await bot.edit_message_text(text=text, chat_id=chat_id, message_id=start_message)
 
-        text = TextsUser.get_menu_text('start')
+        text = TextsUser.get_menu_text('start')()
         keyboard = Keyboard.get_menu_keyboard('start')
         start_message = await bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
         await state.update_data(contact_message=start_message.message_id)
@@ -193,13 +193,15 @@ async def get_link(telegram_id: int) -> list:
         except Exception as err:
             logger.error(err)
     for channel in channels:
+        try:
+            await channel.unban(telegram_id)
+            await channel.unban_sender_chat(telegram_id)
+        # try:
+        #     await bot.unban_chat_member(channel_id, telegram_id)
+        except Exception as exc:
+            logger.error(f'{exc.__traceback__.tb_frame}\n{exc}')
         if channel.type == 'channel':
-            try:
-                await channel.unban(telegram_id)
-            # try:
-            #     await bot.unban_chat_member(channel_id, telegram_id)
-            except Exception as exc:
-                logger.error(f'{exc.__traceback__.tb_frame}\n{exc}')
+
             try:
                 # link: ChatInviteLink = await bot.create_chat_invite_link(
                 #     channel_id, expire_date.timestamp(), 1)
@@ -209,6 +211,7 @@ async def get_link(telegram_id: int) -> list:
                     member_limit=1
                 )
                 links.append(link.invite_link)
+                User.got_invited(telegram_id=telegram_id)
             except Exception as err:
                 logger.error(err)
     return links

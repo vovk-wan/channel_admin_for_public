@@ -9,7 +9,7 @@ from aiogram.types.chat import Chat
 
 from config import logger, bot, admins_list
 from keyboards import admin
-from models import GetcourseGroup, Channel
+from models import GetcourseGroup, Channel, User
 from models import Group
 from states import AdminState, get_state_name
 from texts.menu import AdminTexts
@@ -22,9 +22,9 @@ class AdminKeyboard:
     waiting_group: InlineKeyboardMarkup = admin.admin_menu()
     club_group: InlineKeyboardMarkup = admin.admin_menu()
     edit_channel_list: InlineKeyboardMarkup = admin.admin_menu()
-    mailing_list: InlineKeyboardMarkup = admin.admin_menu()
+    mailing_list: InlineKeyboardMarkup = admin.cancel()
     user_menu: InlineKeyboardMarkup = admin.admin_menu()
-    add_channel: InlineKeyboardMarkup = admin.add_channel()
+    add_channel: InlineKeyboardMarkup = admin.cancel_edit_channel()
 
     @classmethod
     def get_menu_keyboard(cls, name: str):
@@ -58,7 +58,7 @@ async def start_menu_admin(callback: CallbackQuery, state: FSMContext) -> None:
     channel_list = "\n".join(f'{channel.name} - {channel.channel_id}' for channel in channel_names)
     channels = f'\n\nтекущие каналы \n {channel_list}'
 
-    text = AdminTexts.get_menu_text(name_state)
+    text = AdminTexts.get_menu_text(name_state)()
     text = text + groups + channels
     keyboard = AdminKeyboard.get_menu_keyboard(name_state)
 
@@ -71,7 +71,7 @@ async def start_menu_admin(callback: CallbackQuery, state: FSMContext) -> None:
 
     except aiogram.utils.exceptions.MessageNotModified as err:
         logger.error(err)
-    await callback.answer()
+    # await callback.answer()
 
 #
 # @logger.catch
@@ -129,7 +129,7 @@ async def group_registration(callback: CallbackQuery, state: FSMContext) -> None
         chat_id = callback.message.chat.id
 
         data = await state.get_data()
-        text = AdminTexts.get_menu_text(name_state)
+        text = AdminTexts.get_menu_text(name_state)()
 
         start_message = data.get('start_message')
         current_state = callback.data
@@ -188,7 +188,7 @@ async def channel_registration(callback: CallbackQuery, state: FSMContext) -> No
             await callback.answer()
             return
         elif name_state == 'add_channel':
-            await add_channel(callback=callback, state=state)
+            await wait_text(callback=callback, state=state)
             await callback.answer()
             return
         elif name_state.split(':')[0] == 'delete':
@@ -216,7 +216,7 @@ async def channel_registration(callback: CallbackQuery, state: FSMContext) -> No
 
         data = await state.get_data()
         chat_id = callback.message.chat.id
-        text = AdminTexts.get_menu_text(name_state)
+        text = AdminTexts.get_menu_text(name_state)()
         result_add_channel = data.get('result_add_channel')
         if result_add_channel:
             data.pop('result_add_channel')
@@ -237,15 +237,15 @@ async def channel_registration(callback: CallbackQuery, state: FSMContext) -> No
 
 
 @logger.catch
-async def add_channel(callback: CallbackQuery, state: FSMContext) -> None:
-    """Функция запроса управления каналами и группами которым бот должен управлять"""
+async def wait_text(callback: CallbackQuery, state: FSMContext) -> None:
+    """Функция для ожидания текстового сообщения"""
 
     telegram_id = callback.from_user.id
     if str(telegram_id) in admins_list:
         data = await state.get_data()
         chat_id = callback.message.chat.id
         name_state = callback.data
-        text = AdminTexts.get_menu_text(name_state)
+        text = AdminTexts.get_menu_text(name_state)()
         start_message = data.get('start_message')
         keyboard = AdminKeyboard.get_menu_keyboard(name_state)
         try:
@@ -295,3 +295,27 @@ async def edit_channel(message: Message, state: FSMContext) -> None:
         answer = 'Канал добавлен'
     await state.update_data(result_add_channel=answer)
     await channel_registration(callback=callback, state=state)
+
+
+@logger.catch
+async def mailing_list(message: Message, state: FSMContext) -> None:
+    """
+    Функция отправляет ссылки на оплату всем
+    пользователям из листа ожидания у кого есть телеграм ид
+    """
+    value: str = message.text
+    answer = 'Канал не найден попробуйте ещё раз'
+    title = ''
+    users = User.get_users_from_waiting_list()
+    for telegram_id in users:
+        try:
+            await bot.send_message(telegram_id, value)
+        except Exception as err:
+            logger.error(err)
+    callback = CallbackQuery()
+    callback.message = message
+    callback.id = message.message_id
+    callback.from_user = message.from_user
+    callback.data = get_state_name(AdminState.edit_channel_list)
+
+    await start_menu_admin(callback=callback, state=state)

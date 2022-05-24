@@ -29,6 +29,8 @@ class AdminState(StatesGroup):
     mailing_list = State(state='mailing_list')
     # вернутся в пользовательское меню
     exit = State(state='exit')
+    add_privileged = State(state='add_privileged')
+    delete_privileged = State(state='delete_privileged')
 
     @classmethod
     def get_state_by_name(cls, state: str):
