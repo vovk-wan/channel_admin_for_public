@@ -3,6 +3,7 @@ from aiogram.types import (
     ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton)
 
 from config import logger
+from models import Text
 
 
 @logger.catch
@@ -65,9 +66,9 @@ def inline_button_invite_link() -> InlineKeyboardButton:
 @logger.catch
 def inline_button_link_wait_list() -> InlineKeyboardButton:
     """Возвращает кнопку с инвайт ссылкой"""
-
+    url = Text.get_link_waiting_list_text()
     return InlineKeyboardButton(
-        text='Ссылка на лист ожидания ', callback_data='start', url='https://yandex.ru')
+        text='Ссылка на лист ожидания ', callback_data='start', url=url)
 
 # ***** end inline buttons ****************
 
@@ -151,3 +152,14 @@ def not_in_base_() -> ReplyKeyboardMarkup:
         button_contact(),
         button_start(),
     )
+
+
+@logger.catch
+def club_got_link_() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(row_width=1).add(inline_button_start())
+
+
+@logger.catch
+def wait_list_() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(row_width=1).add(inline_button_start())
+

@@ -94,8 +94,8 @@ async def start_add_privileged(message: Message, state: FSMContext):
 
 
 @logger.catch
-async def check_new_user_is_exists_handler(message: Message, state: FSMContext) -> None:
-    """Получает сообщение от админа и добавляет пользователя в БД
+async def add_users_privileges_handler(message: Message, state: FSMContext) -> None:
+    """Получает сообщение от админа и добавляет пользователя в привилегированные
 
     """
     logger.debug(f"Add user message: {message}")
@@ -118,8 +118,9 @@ async def check_new_user_is_exists_handler(message: Message, state: FSMContext) 
         reply_markup=cancel()
     )
 
+
 @ logger.catch
-async def start_add_privileged(message: Message, state: FSMContext):
+async def start_delete_privileged(message: Message, state: FSMContext):
     """test manager"""
     telegram_id: str = str(message.from_user.id)
     user_is_superadmin: bool = telegram_id in admins_list
@@ -135,16 +136,16 @@ async def start_add_privileged(message: Message, state: FSMContext):
 
 
 @logger.catch
-async def check_new_user_is_exists_handler(message: Message, state: FSMContext) -> None:
-    """Получает сообщение от админа и добавляет пользователя в БД
+async def delete_users_privileges_handler(message: Message, state: FSMContext) -> None:
+    """Получает сообщение от админа и исключает пользователя из привилегированных
 
     """
     logger.debug(f"Add user message: {message}")
     if not message.forward_from:
         await message.answer(
-            "Нужно переслать (forward) любое сообщение из телеграма от пользователя, "
+            "Нужно переслать (forward) любое сообщение из телеграм от пользователя, "
             "которого вы хотите добавить. Если не получается - скажите пользователю, "
-            "чтоб разрешил пересылку сообшений в своих настройках телеграма.",
+            "чтоб разрешил пересылку сообщений в своих настройках телеграм.",
             reply_markup=cancel()
         )
         return
@@ -153,7 +154,7 @@ async def check_new_user_is_exists_handler(message: Message, state: FSMContext) 
     user_nickname: str = message.forward_from.username
     if User.delete_privileged_status_by_telegram_id(user_telegram_id):
         text = 'У пользователя снят статус "привилегированный"'
-
+    await state.finish()
     await message.answer(
         f"{text} {user_telegram_id}: {user_nickname}",
         reply_markup=cancel()
@@ -167,9 +168,10 @@ def menu_register_handlers(dp: Dispatcher) -> None:
     """
     #  ********* функции user_menu
     dp.register_message_handler(start_menu_handler, commands=["start"], state="*")
-    dp.register_message_handler(start_add_privileged, commands=["privileged"], state="*")
-    dp.register_message_handler(start_add_privileged, state=[AdminState.add_privileged])
-    dp.register_message_handler(start_add_privileged, state=[AdminState.delete_privileged])
+    dp.register_message_handler(start_add_privileged, commands=["add_privileged"], state="*")
+    dp.register_message_handler(add_users_privileges_handler, state=[AdminState.add_privileged])
+    dp.register_message_handler(start_delete_privileged, commands=["del_privileged"], state="*")
+    dp.register_message_handler(delete_users_privileges_handler, state=[AdminState.delete_privileged])
     dp.register_message_handler(
         start_menu_handler, Text(startswith=["назад"], ignore_case=True), state="*")
     dp.register_callback_query_handler(main_menu_handler, state=[

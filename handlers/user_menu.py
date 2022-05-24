@@ -21,20 +21,18 @@ from texts.menu import TextsUser
 
 @dataclass
 class Keyboard:
-    start: InlineKeyboardMarkup = user_menu.start_()
-    about: InlineKeyboardMarkup = user_menu.about_()
-    want: InlineKeyboardMarkup = user_menu.want_()
-    reviews: InlineKeyboardMarkup = user_menu.want_()
-    prices: InlineKeyboardMarkup = user_menu.want_()
-    club_not_got_link: InlineKeyboardMarkup = user_menu.link_()
-    club_got_link: InlineKeyboardMarkup = InlineKeyboardMarkup(row_width=1).add(
-                                                                user_menu.inline_button_start())
-    excluded: InlineKeyboardMarkup = user_menu.excluded_()
-    wait_list: ReplyKeyboardMarkup = InlineKeyboardMarkup(row_width=1).add(
-                                                                user_menu.inline_button_start())
-    challenger: ReplyKeyboardMarkup = user_menu.challenger_()
-    not_in_base: ReplyKeyboardMarkup = user_menu.not_in_base_()
-    get_invite_link: ReplyKeyboardMarkup = user_menu.not_in_base_()
+    start: InlineKeyboardMarkup = user_menu.start_
+    about: InlineKeyboardMarkup = user_menu.about_
+    want: InlineKeyboardMarkup = user_menu.want_
+    reviews: InlineKeyboardMarkup = user_menu.want_
+    prices: InlineKeyboardMarkup = user_menu.want_
+    club_not_got_link: InlineKeyboardMarkup = user_menu.link_
+    club_got_link: InlineKeyboardMarkup = user_menu.club_got_link_
+    excluded: InlineKeyboardMarkup = user_menu.excluded_
+    wait_list: ReplyKeyboardMarkup = user_menu.wait_list_
+    challenger: ReplyKeyboardMarkup = user_menu.challenger_
+    not_in_base: ReplyKeyboardMarkup = user_menu.not_in_base_
+    get_invite_link: ReplyKeyboardMarkup = user_menu.not_in_base_
 
     @classmethod
     def get_menu_keyboard(cls, name: str):
@@ -86,7 +84,7 @@ async def start_menu_handler(message: Message, state: FSMContext) -> None:
     except aiogram.utils.exceptions.MessageNotModified as err:
         logger.error(err)
         await state.finish()
-        await user_menu_handler(message=message, state=state)
+        await start_menu_handler(message=message, state=state)
         return
     await message.delete()
 
@@ -112,7 +110,7 @@ async def user_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
     if name_state == 'want':
         name_state = utils.get_user_position(telegram_id)
     text = TextsUser.get_menu_text(name_state)()
-    keyboard = Keyboard.get_menu_keyboard(name_state)
+    keyboard = Keyboard.get_menu_keyboard(name_state)()
 
     await state.set_state(MenuState.get_state_by_name(callback.data))
     start_message = data.get('start_message')
@@ -139,7 +137,7 @@ async def user_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
         await bot.edit_message_text(text=text, chat_id=chat_id, message_id=start_message)
 
         text = TextsUser.get_menu_text('start')()
-        keyboard = Keyboard.get_menu_keyboard('start')
+        keyboard = Keyboard.get_menu_keyboard('start')()
         start_message = await bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
         await state.update_data(contact_message=start_message.message_id)
         return
