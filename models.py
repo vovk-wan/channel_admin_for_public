@@ -26,7 +26,7 @@ class Statuses:
 
 
 @dataclass(frozen=True)
-class StateTexts:
+class DefaultTexts:
     start: str = 'Тест в основном меню'
     about: str = 'Текст о клубе'
     prices: str = 'Текст с ценами'
@@ -60,7 +60,7 @@ class Text(BaseModel):
     def get_start_text(cls):
         data = cls.select().first()
         if not data:
-            data = StateTexts
+            data = DefaultTexts
         return data.start
 
     @classmethod
@@ -68,7 +68,7 @@ class Text(BaseModel):
     def get_about_text(cls):
         data = cls.select().first()
         if not data:
-            data = StateTexts
+            data = DefaultTexts
         return data.about
 
     @classmethod
@@ -76,7 +76,7 @@ class Text(BaseModel):
     def get_prices_text(cls):
         data = cls.select().first()
         if not data:
-            data = StateTexts
+            data = DefaultTexts
         return data.prices
 
     @classmethod
@@ -84,7 +84,7 @@ class Text(BaseModel):
     def get_reviews_text(cls):
         data = cls.select().first()
         if not data:
-            data = StateTexts
+            data = DefaultTexts
         return data.reviews
 
     @classmethod
@@ -92,7 +92,7 @@ class Text(BaseModel):
     def get_goodbye_text(cls):
         data = cls.select().first()
         if not data:
-            data = StateTexts
+            data = DefaultTexts
         return data.goodbye
 
     @classmethod
@@ -100,13 +100,32 @@ class Text(BaseModel):
     def get_link_waiting_list_text(cls):
         data = cls.select().first()
         if not data:
-            data = StateTexts
+            data = DefaultTexts
         return data.link_waiting_list
 
 
+class MessageNewStatus(BaseModel):
+    """Class for text message  table"""
+    challenger = TextField(verbose_name='Тест после отправки номера телефона')
+    waiting = TextField(verbose_name='Текст после регистрации в листе ожидания')
+    entered = TextField(verbose_name='Текст после вступления в клуб')
+    returned = TextField(verbose_name='Текст после возвращения в клуб')
+    excluded = TextField(verbose_name='Текст после исключения из клуба')
+    privileged = CharField(verbose_name='Текст после получения привилегий')
+
+    class Meta:
+        db_table = "messages_new_status"
+
+    @classmethod
+    @logger.catch
+    def get_messages(cls):
+        data = cls.select().dicts().first()
+        return data if data else {}
+
+
 class GetcourseGroup(BaseModel):
-    waiting_group_id = CharField(default='0', verbose_name='id группы лист ожидания')
-    club_group_id = CharField(default='0', verbose_name='id группы члены клуба')
+    waiting_group_id = CharField(default='', verbose_name='id группы лист ожидания')
+    club_group_id = CharField(default='', verbose_name='id группы члены клуба')
 
     class Meta:
         db_table = "group_get_course"
@@ -234,7 +253,7 @@ class User(BaseModel):
     admin = BooleanField(default=False, verbose_name="Администраторство")
     # -------------- update
     status = CharField(max_length=50, verbose_name='Статус пользователя')
-    # когда статус обновлен проверяется нужно ли отправить сообщение и значение меняется на False
+    # статус обновлен
     status_updated = BooleanField(default=True, verbose_name='Обновлен статус')
     # в клубе, доступ оплачен, в основной группе
     member = BooleanField(default=False, verbose_name='Член клуба')
@@ -384,6 +403,18 @@ class User(BaseModel):
 
     @classmethod
     @logger.catch
+    def delete_user_from_waiting_list_by_getcourse_id(cls: 'User', getcourse_id: List[Any]) -> int:
+        """
+        exclude user by getcourse id
+        """
+        return (
+          cls.delete().
+          where(cls.getcourse_id.not_in(getcourse_id)).
+          where(cls.status == Statuses.waiting).execute()
+        )
+
+    @classmethod
+    @logger.catch
     def get_users_from_waiting_list(cls: 'User') -> list:
         """
         return list of telegram ids for users from waiting list
@@ -396,6 +427,20 @@ class User(BaseModel):
             where(cls.status == Statuses.waiting).
             execute() if user.telegram_id
         ]
+
+    @classmethod
+    @logger.catch
+    def get_users_for_mailing_new_status(cls: 'User') -> list:
+        users = (
+            cls.select().where(cls.status_updated == True).
+            where(cls.telegram_id.is_null(False)).execute()
+        )
+        return [user for user in users if user.telegram_id]
+
+    @classmethod
+    @logger.catch
+    def un_set_status_updated_for_all(cls: 'User') -> list:
+        return cls.update(status_updated=False).execute()
 
     @classmethod
     @logger.catch
@@ -426,9 +471,9 @@ class User(BaseModel):
     @logger.catch
     def delete_privileged_status_by_telegram_id(cls: 'User', telegram_id: int) -> bool:
         """
-            function add privileged user
+            function делете privileged user
         """
-        return (cls.update(status=Statuses.privileged, status_updated=False).
+        return (cls.update(status=Statuses.challenger, status_updated=True).
                 where(cls.telegram_id == telegram_id).execute()
                 )
 
@@ -438,7 +483,7 @@ class User(BaseModel):
         """
             function change data got invited link
         """
-        return cls.update(got_invited=True).where(cls.telegram_id == telegram_id).execute()
+        return cls.update(got_invite=True).where(cls.telegram_id == telegram_id).execute()
 
 
 @logger.catch
@@ -460,7 +505,7 @@ def recreate_db(_db_file_name: str) -> None:
     with db:
         if os.path.exists(_db_file_name):
             drop_db()
-        db.create_tables([User, Channel, Group, GetcourseGroup, UserStatus, Text], safe=True)
+        db.create_tables([User, Channel, Group, GetcourseGroup, UserStatus, Text, MessageNewStatus ], safe=True)
         logger.info('DB Recreated')
 
 
@@ -477,3 +522,4 @@ if __name__ == '__main__':
 
     if recreate:
         recreate_db(db_file_name)
+

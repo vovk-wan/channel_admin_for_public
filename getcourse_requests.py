@@ -2,14 +2,10 @@ import datetime
 import time
 import asyncio
 from typing import Tuple, Dict
-import json
 
 import requests
 
 from config import ACCOUNT_NAME, SECRET_KEY, logger
-
-PERSONS_FILE = 'person_save.json'
-GROUPS_FILE = 'group_save.json'
 
 
 def make_groups_list() -> Tuple:
@@ -26,11 +22,6 @@ def make_groups_list() -> Tuple:
             return tuple()
         data = response.json()
 
-        # записываем в json
-        # TODO или добавить параметр, или удалить
-        # with open(GROUPS_FILE, 'w', encoding='utf8') as file_save:
-        #     json.dump(data, file_save, ensure_ascii=False, indent=4)
-        # # TODO end или добавить параметр, или удалить
     except Exception as exc:
         logger.error(f'{exc.__traceback__.tb_frame}\n{exc}')
         return tuple()
@@ -101,11 +92,6 @@ async def get_data(export_id: int, count_limit: int, group_name: str) -> Dict:
                 }
             data = response.json()
 
-            # записываем в json
-            # TODO или добавить параметр, или удалить
-            with open(f'{group_name}{PERSONS_FILE}', 'w', encoding='utf8') as file_save:
-                json.dump(data, file_save, ensure_ascii=False, indent=4)
-            # TODO end или добавить параметр, или удалить
         except Exception as exc:
             logger.error(f'{exc.__traceback__.tb_frame}\n{exc}')
 

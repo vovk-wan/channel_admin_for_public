@@ -44,3 +44,11 @@ def cancel() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(row_width=1).add(
             InlineKeyboardButton(text='Отмена', callback_data='about')
     )
+
+
+@logger.catch
+def admin() -> InlineKeyboardMarkup:
+
+    return InlineKeyboardMarkup(row_width=1).add(
+            InlineKeyboardButton(text='admin', callback_data='start_admin')
+    )

@@ -13,7 +13,7 @@ import aiogram.utils.exceptions
 from config import logger, Dispatcher, bot, EMOJI, LINK_EXPIRATION_TIME, admins_list
 from models import User, Channel
 from states import MenuState, AdminState, get_state_name
-from keyboards import user_menu
+from keyboards import user
 from handlers import utils
 # from handlers.admin_menu import admin_menu_handler
 from texts.menu import TextsUser
@@ -21,18 +21,19 @@ from texts.menu import TextsUser
 
 @dataclass
 class Keyboard:
-    start: InlineKeyboardMarkup = user_menu.start_
-    about: InlineKeyboardMarkup = user_menu.about_
-    want: InlineKeyboardMarkup = user_menu.want_
-    reviews: InlineKeyboardMarkup = user_menu.want_
-    prices: InlineKeyboardMarkup = user_menu.want_
-    club_not_got_link: InlineKeyboardMarkup = user_menu.link_
-    club_got_link: InlineKeyboardMarkup = user_menu.club_got_link_
-    excluded: InlineKeyboardMarkup = user_menu.excluded_
-    wait_list: ReplyKeyboardMarkup = user_menu.wait_list_
-    challenger: ReplyKeyboardMarkup = user_menu.challenger_
-    not_in_base: ReplyKeyboardMarkup = user_menu.not_in_base_
-    get_invite_link: ReplyKeyboardMarkup = user_menu.not_in_base_
+    start: InlineKeyboardMarkup = user.start_
+    about: InlineKeyboardMarkup = user.about_
+    want: InlineKeyboardMarkup = user.want_
+    reviews: InlineKeyboardMarkup = user.want_
+    prices: InlineKeyboardMarkup = user.want_
+    club_not_got_link: InlineKeyboardMarkup = user.link_
+    club_got_link: InlineKeyboardMarkup = user.club_got_link_
+    excluded: InlineKeyboardMarkup = user.excluded_
+    wait_list: ReplyKeyboardMarkup = user.wait_list_
+    challenger: ReplyKeyboardMarkup = user.challenger_
+    not_in_base: ReplyKeyboardMarkup = user.not_in_base_
+    get_invite_link: ReplyKeyboardMarkup = user.not_in_base_
+
 
     @classmethod
     def get_menu_keyboard(cls, name: str):
@@ -60,6 +61,7 @@ async def start_menu_handler(message: Message, state: FSMContext) -> None:
         Функция - приветствие
         выводит основное меню и сообщение - основу под все кнопки
     """
+
     text = TextsUser.start()
     chat_id = message.chat.id
     await state.set_state(MenuState.start)
@@ -71,7 +73,7 @@ async def start_menu_handler(message: Message, state: FSMContext) -> None:
         await state.set_data(data)
     start_message = data.get('start_message')
     if not start_message:
-        start_message = await message.answer(text=text, reply_markup=user_menu.start_())
+        start_message = await message.answer(text=text, reply_markup=user.start_())
         await state.update_data(start_message=start_message.message_id)
         return
     try:
@@ -79,7 +81,7 @@ async def start_menu_handler(message: Message, state: FSMContext) -> None:
             text=text,
             chat_id=chat_id,
             message_id=start_message,
-            reply_markup=user_menu.start_(),
+            reply_markup=user.start_(),
         )
     except aiogram.utils.exceptions.MessageNotModified as err:
         logger.error(err)
@@ -89,7 +91,7 @@ async def start_menu_handler(message: Message, state: FSMContext) -> None:
     await message.delete()
 
     # await bot.edit_message_reply_markup(
-    #     reply_markup=user_menu.start_(), chat_id=message.chat.id, message_id=start_message)
+    #     reply_markup=user.start_(), chat_id=message.chat.id, message_id=start_message)
 
 
 @logger.catch
@@ -132,6 +134,9 @@ async def user_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
     elif name_state == 'get_invite_link':
         # channel_id = Channel.get_channel()
         links = await get_link(telegram_id=telegram_id)
+        if not links:
+            bot.answer_callback_query(callback.id, 'при формировании ссылок произошла ошибка\n'
+                                                   'обратитесь к администратору')
         links_str = "\n".join(links)
         text = f'{text} \n{links_str}'
         await bot.edit_message_text(text=text, chat_id=chat_id, message_id=start_message)
@@ -179,6 +184,10 @@ async def add_phone_number(message: Message, state: FSMContext):
 
 
 async def get_link(telegram_id: int) -> list:
+    """function for make invite link"""
+    # channel_id = Channel.get_channel()
+    # if not channel_id:
+    #     return
     links = []
     expire_date = datetime.datetime.now() + datetime.timedelta(hours=LINK_EXPIRATION_TIME)
     channels = []
@@ -190,6 +199,7 @@ async def get_link(telegram_id: int) -> list:
                 channels.append(result)
         except Exception as err:
             logger.error(err)
+
     for channel in channels:
         try:
             await channel.unban(telegram_id)

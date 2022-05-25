@@ -4,25 +4,32 @@ import asyncio
 
 import aiogram.utils.exceptions
 import aioschedule
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.storage import BaseStorage
 from aiogram.types.chat import Chat
+from aiogram.types import InlineKeyboardMarkup
 
+
+import states
 from config import bot, logger, EMOJI, REQUEST_LIMIT, REQUEST_RATE, KICK_RATE, admins_list
 from get_channel_info import get_channel_data
 from getcourse_requests import get_data, make_user_list_by_group, make_groups_list
-from models import User, Channel, Group, Statuses, SourceData, GetcourseGroup
+from models import User, Channel, Group, Statuses, SourceData, GetcourseGroup, MessageNewStatus
+from keyboards.admin import admin as keyboard_admin
 
 
 @logger.catch
-async def send_message_to_admin(text: str) -> None:
+async def send_message_to_admin(text: str, keyboard: InlineKeyboardMarkup = None) -> None:
     """Отправляет сообщение админам"""
     for admin_id in admins_list:
         try:
             await bot.send_message(
                 chat_id=admin_id,
-                text=text
+                text=text,
             )
+
         except Exception as err:
-            logger.error(f'{err.__traceback__.tb_frame}\n{err}')
+            logger.error(err)
 
 
 @ logger.catch
@@ -83,7 +90,7 @@ async def channel_exclude_users(data: list, channels: list) -> None:
     Удаляет пользователей с окончившейся подпиской из канала.
     Меняет статус пользователей на исключен
     :param data: список пользователей полученных от API.
-    :param channel_id: id канала который бот администрирует.
+    :param channels: список каналов которые бот администрирует.
     :return: None
     """
     getcourse_id = tuple(user.get('getcourse_id', None) for user in data)
@@ -91,7 +98,6 @@ async def channel_exclude_users(data: list, channels: list) -> None:
     if list_for_exclude:
         for channel_data in channels:
             channel_id = channel_data.channel_id
-
 
             logger.info('List users for kicked received.\n Starting delete users for channel')
             channel: Chat = await bot.get_chat(channel_id)
@@ -155,7 +161,7 @@ async def channel_kick_hackers(
                  for key, value in member.items()]
             )
             await send_message_to_admin(text=text)
-            logger.error(f'{err.__traceback__.tb_frame}\n{err}')
+            logger.error(err)
 
     logger.info(
         f'Removed {count} users from the channel '
@@ -173,8 +179,21 @@ def add_new_users(data: list, source: str) -> int:
     return User.update_users(users=data, source=source)
 
 
+async def mailing_new_status(users: list):
+    """Отправляет сообщение пользователям о смене статуса"""
+    messages: dict = MessageNewStatus.get_messages()
+    for user in users:
+        telegram_id = user.telegram_id
+        text = messages.get(user.status, '').strip()
+        if text:
+            try:
+                await bot.send_message(chat_id=telegram_id, text=text)
+            except Exception as err:
+                logger.error(f'{err.__traceback__.tb_frame}\n{err}')
+
+
 @logger.catch
-async def channel_maintenance():
+async def channel_maintenance() -> None:
     """
     Функция обслуживания канала.
     :return:
@@ -185,59 +204,69 @@ async def channel_maintenance():
     channels: list = Channel.get_channels()
     if not channels:
         await send_message_to_admin('Нет id канала, нужно добавить id канала и выбрать группу.\n'
-                                    'воспользуйтесь командой.\n/admin')
+                                    ' воспользуйтесь командой. \n/admin', keyboard_admin())
 
-        logger.error(f'start channel maintenance: not channel_id. work stopped ')
+        logger.error('not channel_id. work stopped ')
         return
     edit_group_list()
-    logger.info(f'start channel maintenance:  get groups')
+    logger.info('get groups')
 
     member_group_id = GetcourseGroup.get_club_group()
     if not member_group_id:
         await send_message_to_admin('Нет id основной группы, нужно выбрать группу.\n'
-                                    'воспользуйтесь командой.\n/admin')
+                                    'воспользуйтесь командой.\n/admin', keyboard_admin())
 
-        logger.error(f'start channel maintenance:  not member_group_id. work stopped ')
+        logger.error('not member_group_id. work stopped ')
         return
 
-    logger.info(f'start channel maintenance: club group  get data')
+    logger.info('club group  get data')
     data_id = get_data_id_from_api(member_group_id)
     if not data_id:
-        logger.error(f'start channel maintenance:  not data_id. club group work stopped ')
+        logger.error('not data_id. club group work stopped ')
         return
     data = await get_data_from_api(data_id, SourceData.club)
 
     if not data:
-        logger.error(f'start channel maintenance:  not user list. club group work stopped ')
+        logger.error('not user list. club group work stopped ')
         return
+
     logger.info(f'start channel maintenance: club group')
     await channel_exclude_users(data, channels)
+
     count = add_new_users(data, SourceData.club)
     logger.info(f'{count} users updated to BD club group')
+    users_with_updated_status = User.get_users_for_mailing_new_status()
+    await mailing_new_status(users_with_updated_status)
+    count = User.un_set_status_updated_for_all()
+    logger.info(f'{count} mail sends')
 
     waiting_group_id = GetcourseGroup.get_waiting_group()
     if not waiting_group_id:
         await send_message_to_admin('Нет id группы листа ожидания, нужно выбрать группу.\n'
                                     'воспользуйтесь командой.\n/admin')
 
-        logger.error(f'start channel maintenance:  not waiting_group_id. work stopped ')
+        logger.error('not waiting_group_id. work stopped ')
         return
-    logger.info(f'start channel maintenance:  get data waiting list')
+
+    logger.info('get data waiting list')
     data_id = get_data_id_from_api(waiting_group_id)
     if not data_id:
-        logger.error(f'start channel maintenance:  not data_id.  waiting list work stopped ')
+        logger.error('not data_id.  waiting list work stopped ')
         return
     data = await get_data_from_api(data_id, SourceData.waiting_list)
 
     if not data:
-        logger.error(f'start channel maintenance:  not user list.  waiting list work stopped ')
+        logger.error('not user list.  waiting list work stopped ')
         return
 
     count = add_new_users(data, SourceData.waiting_list)
     logger.info(f'{count} users updated to BD waiting list group')
-    # getcourse_id = tuple(user.get('getcourse_id', None) for user in data)
-    # count = User.exclude_user_by_getcourse_id(list(getcourse_id))
-    # logger.info(f'{count}  users get status excluded')
+    getcourse_id = tuple(user.get('getcourse_id', None) for user in data)
+    count = User.delete_user_from_waiting_list_by_getcourse_id(list(getcourse_id))
+    logger.info(f'{count}  users delete from DB')
+    await mailing_new_status(users_with_updated_status)
+    count = User.un_set_status_updated_for_all()
+    logger.info(f'{count} mail sends')
 
 
 async def kick_hackers():
@@ -272,7 +301,7 @@ async def kick_hackers():
 @logger.catch
 async def check_base():
     # aioschedule.every(REQUEST_RATE).minutes.do(channel_maintenance)
-    aioschedule.every(KICK_RATE).minutes.do(kick_hackers)
+    # aioschedule.every(KICK_RATE).minutes.do(kick_hackers)
     while True:
         await aioschedule.run_pending()
         await asyncio.sleep(1)

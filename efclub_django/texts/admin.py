@@ -1,5 +1,5 @@
 from django.contrib import admin
-from texts.models import Channel, User, UserStatus, Text, Group, GetcourseGroup
+from texts.models import Channel, User, UserStatus, Text, Group, GetcourseGroup, MessageNewStatus
 # Register your models here.
 # from models import UserStatus
 
@@ -9,6 +9,10 @@ class UserStatusAdmin(admin.ModelAdmin):
 
 
 class TextAdmin(admin.ModelAdmin):
+    pass
+
+
+class MessageNewStatusAdmin(admin.ModelAdmin):
     pass
     # list_display = ['user_name', 'short_text', 'news']
     # list_filter = ['user_name']
@@ -28,3 +32,4 @@ class TextAdmin(admin.ModelAdmin):
 
 admin.site.register(UserStatus, UserStatusAdmin)
 admin.site.register(Text, TextAdmin)
+admin.site.register(MessageNewStatus, MessageNewStatusAdmin)

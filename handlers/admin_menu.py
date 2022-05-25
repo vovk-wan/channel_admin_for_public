@@ -50,10 +50,10 @@ async def start_menu_admin(callback: CallbackQuery, state: FSMContext) -> None:
     chat_id = callback.message.chat.id
     group_id = GetcourseGroup.get_club_group()
     club_group_name = Group.get_name_group_by_id(group_id)
-    groups = f'\nтекущая группа членов клуба "{club_group_name}'
+    groups = f'\nтекущая группа членов клуба "{club_group_name}-{group_id}'
     group_id = GetcourseGroup.get_waiting_group()
     waiting_group_name = Group.get_name_group_by_id(group_id)
-    groups += f'\nтекущая группа для листа ожидания "{waiting_group_name}'
+    groups += f'\nтекущая группа для листа ожидания "{waiting_group_name}-{group_id}'
     channel_names = Channel.get_channels()
     channel_list = "\n".join(f'{channel.name} - {channel.channel_id}' for channel in channel_names)
     channels = f'\n\nтекущие каналы \n {channel_list}'
@@ -69,9 +69,13 @@ async def start_menu_admin(callback: CallbackQuery, state: FSMContext) -> None:
         await bot.edit_message_text(
             text=text, chat_id=chat_id, message_id=start_message, reply_markup=keyboard)
 
-    except aiogram.utils.exceptions.MessageNotModified as err:
+    except (aiogram.utils.exceptions.MessageNotModified,
+            aiogram.utils.exceptions.MessageCantBeEdited) as err:
         logger.error(err)
-    # await callback.answer()
+
+        mess = await bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
+        await state.update_data(start_message=mess.message_id)
+    #await callback.answer()
 
 #
 # @logger.catch

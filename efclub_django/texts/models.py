@@ -18,9 +18,9 @@ class Text(models.Model):
 
 class GetcourseGroup(models.Model):
     waiting_group_id = models.CharField(
-        max_length=255, default='0', verbose_name='id группы лист ожидания')
+        max_length=255, default='', verbose_name='id группы лист ожидания')
     club_group_id = models.CharField(
-        max_length=255, default='0', verbose_name='id группы члены клуба')
+        max_length=255, default='', verbose_name='id группы члены клуба')
 
     class Meta:
         db_table = "group_get_course"
@@ -88,3 +88,16 @@ class User(models.Model):
 
     class Meta:
         db_table = "users"
+
+
+class MessageNewStatus(models.Model):
+    """Class for text message  table"""
+    challenger = models.TextField(max_length=255, verbose_name='Тест после отправки номера телефона')
+    waiting = models.TextField(max_length=255, verbose_name='Текст после регистрации в листе ожидания')
+    entered = models.TextField(max_length=255, verbose_name='Текст после вступления в клуб')
+    returned = models.TextField(max_length=255, verbose_name='Текст после возвращения в клуб')
+    excluded = models.TextField(max_length=255, verbose_name='Текст после исключения из клуба')
+    privileged = models.CharField(max_length=255, verbose_name='Текст после получения привилегий')
+
+    class Meta:
+        db_table = "messages_new_status"

@@ -24,6 +24,25 @@ from handlers.user_menu import (
 
 
 @logger.catch
+async def command_admin_handler(message: Message, state: FSMContext) -> None:
+    """
+    Функция обработка команды админ
+    """
+    telegram_id = message.from_user.id
+    if str(telegram_id) not in admins_list:
+        return
+    data = await state.get_data()
+    # start_message = data.get('start_message')
+    await state.set_state(AdminState.start_admin)
+    await state.set_data({'start_message': message.message_id})
+    callback = CallbackQuery()
+    callback.from_user = message.from_user
+    callback.message = message
+    callback.data = get_state_name(AdminState.start_admin)
+    await admin_menu_handler(callback, state)
+
+
+@logger.catch
 async def main_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
     """
     Функция промежуточная
@@ -32,7 +51,7 @@ async def main_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
 
     name_state = callback.data
 
-    if name_state == 'about' and str(telegram_id) in admins_list:
+    if name_state in ('about', 'admin') and str(telegram_id) in admins_list:
         await state.set_state(AdminState.start_admin)
         callback.data = get_state_name(AdminState.start_admin)
         await admin_menu_handler(callback=callback, state=state)
@@ -73,7 +92,10 @@ async def admin_menu_handler(callback: CallbackQuery, state: FSMContext) -> None
         return
     else:
         await start_menu_admin(callback, state)
-        await callback.answer()
+        try:
+            await callback.answer()
+        except aiogram.utils.exceptions.InvalidQueryID as err:
+            logger.error(err)
         return
 
 
@@ -168,6 +190,7 @@ def menu_register_handlers(dp: Dispatcher) -> None:
     """
     #  ********* функции user_menu
     dp.register_message_handler(start_menu_handler, commands=["start"], state="*")
+    dp.register_message_handler(command_admin_handler, commands=["admin"], state="*")
     dp.register_message_handler(start_add_privileged, commands=["add_privileged"], state="*")
     dp.register_message_handler(add_users_privileges_handler, state=[AdminState.add_privileged])
     dp.register_message_handler(start_delete_privileged, commands=["del_privileged"], state="*")
