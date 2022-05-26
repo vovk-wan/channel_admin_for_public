@@ -77,20 +77,19 @@ def inline_button_link_wait_list() -> InlineKeyboardButton:
 def start_() -> InlineKeyboardMarkup:
 
     return InlineKeyboardMarkup(row_width=3).add(
-            InlineKeyboardButton(text='О клубе', callback_data='about'),
-            inline_button_want(),
-            InlineKeyboardButton(text='Тарифы', callback_data='prices'),
-            InlineKeyboardButton(text='Отзывы', callback_data='reviews'),
+        inline_button_want(),
+        InlineKeyboardButton(text='О клубе', callback_data='about'),
+        InlineKeyboardButton(text='Тарифы', callback_data='prices'),
+        InlineKeyboardButton(text='Отзывы', callback_data='reviews'),
     )
 
 
 @logger.catch
 def about_() -> InlineKeyboardMarkup:
 
-    return InlineKeyboardMarkup(row_width=2).add(
-            inline_button_start(),
-            inline_button_want(),
-    )
+    about_keyboard = InlineKeyboardMarkup()
+    about_keyboard.row(inline_button_start(), inline_button_want(),)
+    return about_keyboard
 
 
 @logger.catch
