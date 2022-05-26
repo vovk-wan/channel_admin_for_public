@@ -18,13 +18,13 @@ from texts.menu import AdminTexts
 @dataclass
 class AdminKeyboard:
     """keyboards"""
-    start_admin: InlineKeyboardMarkup = admin.admin_menu()
-    waiting_group: InlineKeyboardMarkup = admin.admin_menu()
-    club_group: InlineKeyboardMarkup = admin.admin_menu()
-    edit_channel_list: InlineKeyboardMarkup = admin.admin_menu()
-    mailing_list: InlineKeyboardMarkup = admin.cancel()
-    user_menu: InlineKeyboardMarkup = admin.admin_menu()
-    add_channel: InlineKeyboardMarkup = admin.cancel_edit_channel()
+    start_admin: InlineKeyboardMarkup = admin.admin_menu
+    waiting_group: InlineKeyboardMarkup = admin.admin_menu
+    club_group: InlineKeyboardMarkup = admin.admin_menu
+    edit_channel_list: InlineKeyboardMarkup = admin.admin_menu
+    mailing_list: InlineKeyboardMarkup = admin.cancel
+    user_menu: InlineKeyboardMarkup = admin.admin_menu
+    add_channel: InlineKeyboardMarkup = admin.cancel_edit_channel
 
     @classmethod
     def get_menu_keyboard(cls, name: str):
@@ -33,6 +33,7 @@ class AdminKeyboard:
         except AttributeError as err:
             logger.info(err)
             return cls.user_menu
+
 
 # @logger.catch
 # async def cancel_handler(message: Message, state: FSMContext) -> None:
@@ -60,7 +61,7 @@ async def start_menu_admin(callback: CallbackQuery, state: FSMContext) -> None:
 
     text = AdminTexts.get_menu_text(name_state)()
     text = text + groups + channels
-    keyboard = AdminKeyboard.get_menu_keyboard(name_state)
+    keyboard = AdminKeyboard.get_menu_keyboard(name_state)()
 
     data = await state.get_data()
     start_message = data.get('start_message')
@@ -75,28 +76,6 @@ async def start_menu_admin(callback: CallbackQuery, state: FSMContext) -> None:
 
         mess = await bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
         await state.update_data(start_message=mess.message_id)
-    #await callback.answer()
-
-#
-# @logger.catch
-# async def admin_handler(message: Message, state: FSMContext) -> None:
-#     user_id = message.from_user.id
-#     if str(user_id) in admins_list:
-#         await state.finish()
-#         channel_id = Channel.get_channel()
-#         channel_name = 'Нет данных'
-#         group_name = 'Нет данных'
-#         if channel_id:
-#             channel: Chat = await bot.get_chat(channel_id)
-#             channel_name = channel.full_name
-#         group_id = Channel.get_group()
-#         if group_id:
-#             group_name = Group.get_name_group_by_id(group_id)
-#         await message.answer(f'Команды администратора\n'
-#                              f'изменить канал текущий канал "{channel_name}"\n'
-#                              f'/channel\n'
-#                              f'изменить группу текущая группа "{group_name}"\n'
-#                              f''f'/group\n')
 
 
 @logger.catch
@@ -138,14 +117,13 @@ async def group_registration(callback: CallbackQuery, state: FSMContext) -> None
         start_message = data.get('start_message')
         current_state = callback.data
         await state.set_state(AdminState.edit_group)
-        await state.update_data(group_edit=current_state)
+        await state.update_data({'group_edit': current_state})
         try:
             await bot.edit_message_text(
                 text=text, chat_id=chat_id, message_id=start_message, reply_markup=keyboard_group)
 
         except aiogram.utils.exceptions.MessageNotModified as err:
             logger.error(err)
-            await callback.answer()
         await callback.answer()
 
 
@@ -156,11 +134,14 @@ async def edit_group(callback: CallbackQuery, state: FSMContext) -> None:
     if str(telegram_id) in admins_list:
         data = await state.get_data()
         group_edit = data.get('group_edit')
+
         answer = 'Группа не изменена'
-        if group_edit == get_state_name(AdminState.club_group):
+        new_state = get_state_name(AdminState.start_admin)
+
+        if group_edit == get_state_name(AdminState.club_group) and callback.data != new_state:
             GetcourseGroup.edit_club_group(callback.data)
             answer = 'Изменена группа членов клуба'
-        if group_edit == get_state_name(AdminState.waiting_group):
+        elif group_edit == get_state_name(AdminState.waiting_group) and callback.data != new_state:
             GetcourseGroup.edit_waiting_group(callback.data)
             answer = 'Изменена группа листа ожидания'
 
@@ -168,7 +149,7 @@ async def edit_group(callback: CallbackQuery, state: FSMContext) -> None:
             callback_query_id=callback.id, text=answer, show_alert=False)
 
         data.pop('group_edit')
-        callback.data = 'start_admin'
+        callback.data = new_state
         await state.update_data(data)
         await state.set_state(AdminState.start_admin)
         await start_menu_admin(callback, state)
@@ -225,16 +206,14 @@ async def channel_registration(callback: CallbackQuery, state: FSMContext) -> No
         if result_add_channel:
             data.pop('result_add_channel')
             await state.set_data(data)
-            # await bot.answer_callback_query(
-            #     callback_query_id=callback.id, text=result_add_channel, show_alert=True)
 
         start_message = data.get('start_message')
         try:
             await bot.edit_message_text(
-                                            text=text, chat_id=chat_id,
-                                            message_id=start_message,
-                                            reply_markup=keyboard_group
-                                        )
+                text=text, chat_id=chat_id,
+                message_id=start_message,
+                reply_markup=keyboard_group
+            )
 
         except aiogram.utils.exceptions.MessageNotModified as err:
             logger.error(err)
@@ -251,13 +230,13 @@ async def wait_text(callback: CallbackQuery, state: FSMContext) -> None:
         name_state = callback.data
         text = AdminTexts.get_menu_text(name_state)()
         start_message = data.get('start_message')
-        keyboard = AdminKeyboard.get_menu_keyboard(name_state)
+        keyboard = AdminKeyboard.get_menu_keyboard(name_state)()
         try:
             await bot.edit_message_text(
-                                            text=text, chat_id=chat_id,
-                                            message_id=start_message,
-                                            reply_markup=keyboard
-                                        )
+                text=text, chat_id=chat_id,
+                message_id=start_message,
+                reply_markup=keyboard
+            )
 
         except aiogram.utils.exceptions.MessageNotModified as err:
             logger.error(err)
@@ -308,8 +287,7 @@ async def mailing_list(message: Message, state: FSMContext) -> None:
     пользователям из листа ожидания у кого есть телеграм ид
     """
     value: str = message.text
-    answer = 'Канал не найден попробуйте ещё раз'
-    title = ''
+
     users = User.get_users_from_waiting_list()
     for telegram_id in users:
         try:
