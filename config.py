@@ -110,7 +110,7 @@ def psql():
     )
     dbp.connect()
     return dbp
-db = psql()
+db = sqlite()
 #  ********** END OF DATABASE CONFIG *************************
 
 
