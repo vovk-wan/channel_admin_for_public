@@ -66,7 +66,7 @@ class Text(BaseModel):
         data = cls.select().first()
         if not data:
             data = DefaultTexts
-        return data.start
+        return data.start if data.start else 'no text'
 
     @classmethod
     @logger.catch

@@ -73,7 +73,10 @@ async def start_menu_handler(message: Message, state: FSMContext) -> None:
         await state.set_data(data)
     start_message = data.get('start_message')
     if not start_message:
-        start_message = await message.answer(text=text, reply_markup=user.start_(telegram_id=telegram_id))
+        try:
+            start_message = await message.answer(text=text, reply_markup=user.start_(telegram_id=telegram_id))
+        except aiogram.utils.exceptions.MessageTextIsEmpty as arr:
+            logger.error(err)
         await state.update_data(start_message=start_message.message_id)
         return
     try:
