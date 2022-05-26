@@ -3,9 +3,14 @@ from texts.models import Channel, User, UserStatus, Text, Group, GetcourseGroup,
 # Register your models here.
 # from models import UserStatus
 
+#
+# class UserStatusAdmin(admin.ModelAdmin):
+#     pass
 
-class UserStatusAdmin(admin.ModelAdmin):
-    pass
+
+class UserAdmin(admin.ModelAdmin):
+    list_display = ['telegram_id', 'status', 'phone', 'expiration_date', ]
+    list_filter = ['got_invite']
 
 
 class TextAdmin(admin.ModelAdmin):
@@ -30,6 +35,7 @@ class MessageNewStatusAdmin(admin.ModelAdmin):
     # short_text.short_description = 'Текст комментария'
 
 
-admin.site.register(UserStatus, UserStatusAdmin)
+# admin.site.register(UserStatus, UserStatusAdmin)
 admin.site.register(Text, TextAdmin)
 admin.site.register(MessageNewStatus, MessageNewStatusAdmin)
+admin.site.register(User, UserAdmin)

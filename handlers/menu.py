@@ -4,7 +4,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.types import (Message, CallbackQuery)
 
-from config import logger, Dispatcher, admins_list
+from config import logger, Dispatcher, admins_list, bot, dp
 from handlers.admin_menu import (
     start_menu_admin, channel_registration, wait_text, edit_channel,
     group_registration,
@@ -14,6 +14,26 @@ from handlers.user_menu import (
     user_menu_handler, cancel_handler, add_phone_number, start_menu_handler
 )
 from states import MenuState, AdminState, get_state_name
+
+
+@logger.catch
+async def get_user_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
+    await state.finish()
+    await start_menu_handler(callback.message, state=state)
+    await callback.answer()
+
+
+@logger.catch
+async def get_invite_link_from_mailing(callback: CallbackQuery, state: FSMContext) -> None:
+    """ function wrapper"""
+    await state.set_state(MenuState.club_got_link)
+    await state.update_data({'start_message': callback.message.message_id})
+    callback.data = 'get_invite_link'
+    await user_menu_handler(callback, state=state)
+    try:
+        await callback.answer()
+    except Exception as err:
+        logger.info(err)
 
 
 @logger.catch
@@ -76,8 +96,17 @@ async def admin_menu_handler(callback: CallbackQuery, state: FSMContext) -> None
         await callback.answer()
         return
     elif name_state == get_state_name(AdminState.mailing_list):
-        await wait_text(callback, state)
-        await callback.answer()
+        count = await mailing_list()
+        await bot.answer_callback_query(
+            callback_query_id=callback.id, text=f'отправлено {count} сообщений')
+        # await wait_text(callback, state)
+        await state.set_state(AdminState.start_admin)
+        callback.data = get_state_name(AdminState.start_admin)
+        # await start_menu_admin(callback, state)
+        try:
+            await callback.answer()
+        except aiogram.utils.exceptions.InvalidQueryID as err:
+            logger.error(err)
         return
     else:
         await start_menu_admin(callback, state)
@@ -94,6 +123,12 @@ def menu_register_handlers(dp: Dispatcher) -> None:
     Регистратор для обработчиков
     """
     #  ********* функции user_menu
+    dp.register_callback_query_handler(
+        get_user_menu_handler, lambda callback: callback.data == 'get_user_menu', state='*')
+
+    dp.register_callback_query_handler(
+        get_invite_link_from_mailing, lambda callback: callback.data == 'get_invite_link_from_mailing', state='*' )
+
     dp.register_message_handler(start_menu_handler, commands=["start"], state="*")
     dp.register_message_handler(
         start_menu_handler, Text(startswith=["назад"], ignore_case=True), state="*")
@@ -123,3 +158,5 @@ def menu_register_handlers(dp: Dispatcher) -> None:
     dp.register_callback_query_handler(channel_registration, state=[AdminState.edit_channel_list])
 
     dp.register_message_handler(mailing_list, state=[AdminState.mailing_list])
+
+    dp.register_message_handler(start_menu_handler)

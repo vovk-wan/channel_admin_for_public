@@ -4,6 +4,8 @@ from aiogram.types import (
 
 from config import logger
 from models import Text
+from handlers.utils import get_user_position
+from models import Statuses
 
 
 @logger.catch
@@ -60,12 +62,19 @@ def inline_button_invite_link() -> InlineKeyboardButton:
     """Возвращает кнопку с инвайт ссылкой"""
 
     return InlineKeyboardButton(
-        text='Получить ссылку', callback_data='get_invite_link')
+        text='Получить инвайт', callback_data='get_invite_link')
+
+
+@logger.catch
+def inline_button_link_user_menu() -> InlineKeyboardButton:
+    """Возвращает кнопку со ссылкой на основное меню"""
+
+    return InlineKeyboardButton(text='Menu', callback_data='get_user_menu')
 
 
 @logger.catch
 def inline_button_link_wait_list() -> InlineKeyboardButton:
-    """Возвращает кнопку с инвайт ссылкой"""
+    """Возвращает кнопку с инвайт ссылкой на лист ожидания"""
     url = Text.get_link_waiting_list_text()
     return InlineKeyboardButton(
         text='Ссылка на лист ожидания ', callback_data='start', url=url)
@@ -74,26 +83,39 @@ def inline_button_link_wait_list() -> InlineKeyboardButton:
 
 
 @logger.catch
-def start_() -> InlineKeyboardMarkup:
+def start_(*args, **kwargs) -> InlineKeyboardMarkup:
+    """
+        Возвращает клавиатуру основного меню
+    """
 
-    return InlineKeyboardMarkup(row_width=3).add(
-        inline_button_want(),
-        InlineKeyboardButton(text='О клубе', callback_data='about'),
-        InlineKeyboardButton(text='Тарифы', callback_data='prices'),
-        InlineKeyboardButton(text='Отзывы', callback_data='reviews'),
-    )
+    keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(row_width=3).add(
+                                       inline_button_want(),
+                                       InlineKeyboardButton(text='О клубе', callback_data='about'),
+                                       InlineKeyboardButton(text='Тарифы', callback_data='prices'),
+                                       InlineKeyboardButton(text='Отзывы', callback_data='reviews'),
+                                    )
+    telegram_id = kwargs.get('telegram_id')
+    if get_user_position(telegram_id=telegram_id) == 'club_not_got_link':
+        keyboard.add(inline_button_invite_link())
+    return keyboard
 
 
 @logger.catch
-def about_() -> InlineKeyboardMarkup:
+def about_(*args, **kwargs) -> InlineKeyboardMarkup:
 
-    about_keyboard = InlineKeyboardMarkup()
-    about_keyboard.row(inline_button_start(), inline_button_want(),)
-    return about_keyboard
+    keyboard = InlineKeyboardMarkup()
+    keyboard.row(inline_button_start(), inline_button_want(),)
+    return keyboard
 
 
 @logger.catch
-def want_() -> InlineKeyboardMarkup:
+def link_menu(*args, **kwargs) -> InlineKeyboardMarkup:
+
+    return InlineKeyboardMarkup().add(link_menu())
+
+
+@logger.catch
+def want_(*args, **kwargs) -> InlineKeyboardMarkup:
 
     return InlineKeyboardMarkup(row_width=2).add(
             inline_button_start(),
@@ -102,17 +124,8 @@ def want_() -> InlineKeyboardMarkup:
 
 
 @logger.catch
-def paid_() -> InlineKeyboardMarkup:
-
-    return InlineKeyboardMarkup(row_width=2).add(
-            inline_button_start(),
-            InlineKeyboardButton(text='Получить инвайт ссылку', callback_data='invite'),
-    )
-
-
-@logger.catch
-def excluded_() -> InlineKeyboardMarkup:
-
+def excluded_(*args, **kwargs) -> InlineKeyboardMarkup:
+    """TODO добавить ссылку на оплату """
     return InlineKeyboardMarkup(row_width=2).add(
             inline_button_start(),
             InlineKeyboardButton(text='Ссылка на оплату', callback_data='скорее всего просто ссылка'),
@@ -120,15 +133,7 @@ def excluded_() -> InlineKeyboardMarkup:
 
 
 @logger.catch
-def contact_() -> InlineKeyboardMarkup:
-
-    return InlineKeyboardMarkup(row_width=2).add(
-            InlineKeyboardButton(text='Ссылка на лист ожидания', callback_data='wait_list'),
-    )
-
-
-@logger.catch
-def link_() -> InlineKeyboardMarkup:
+def link_(*args, **kwargs) -> InlineKeyboardMarkup:
 
     return InlineKeyboardMarkup(row_width=2).add(
             inline_button_start(),
@@ -137,7 +142,7 @@ def link_() -> InlineKeyboardMarkup:
 
 
 @logger.catch
-def challenger_() -> InlineKeyboardMarkup:
+def challenger_(*args, **kwargs) -> InlineKeyboardMarkup:
 
     return InlineKeyboardMarkup(row_width=2).add(
             inline_button_start(),
@@ -146,7 +151,8 @@ def challenger_() -> InlineKeyboardMarkup:
 
 
 @logger.catch
-def not_in_base_() -> ReplyKeyboardMarkup:
+def not_in_base_(*args, **kwargs) -> ReplyKeyboardMarkup:
+
     return ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(
         button_contact(),
         button_start(),
@@ -154,11 +160,25 @@ def not_in_base_() -> ReplyKeyboardMarkup:
 
 
 @logger.catch
-def club_got_link_() -> InlineKeyboardMarkup:
+def club_got_link_(*args, **kwargs) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(row_width=1).add(inline_button_start())
 
 
 @logger.catch
-def wait_list_() -> InlineKeyboardMarkup:
+def wait_list_(*args, **kwargs) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(row_width=1).add(inline_button_start())
 
+
+@logger.catch
+def make_keyboard_for_mailing(status: str, got_invite: bool) -> InlineKeyboardMarkup:
+    keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(inline_button_link_user_menu())
+    if (status in [Statuses.entered, Statuses.returned, Statuses.privileged]
+        and not got_invite):
+        button = inline_button_invite_link()
+        button.callback_data = 'get_invite_link_from_mailing'
+        keyboard.add(button)
+    elif status in [Statuses.excluded]:
+        keyboard.add(inline_button_want())
+
+    return keyboard

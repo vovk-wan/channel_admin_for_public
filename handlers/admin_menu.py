@@ -9,10 +9,12 @@ from aiogram.types.chat import Chat
 
 from config import logger, bot, admins_list
 from keyboards import admin
-from models import GetcourseGroup, Channel, User
+from models import GetcourseGroup, Channel, User, Text
 from models import Group
+from scheduler_funcs import mailing_new_status
 from states import AdminState, get_state_name
 from texts.menu import AdminTexts
+from keyboards.user import link_menu
 
 
 @dataclass
@@ -33,16 +35,6 @@ class AdminKeyboard:
         except AttributeError as err:
             logger.info(err)
             return cls.user_menu
-
-
-# @logger.catch
-# async def cancel_handler(message: Message, state: FSMContext) -> None:
-#     """
-#     Ставит все состояния в нерабочие.
-#     Обработчик команды /cancel
-#     """
-#     await state.finish()
-#     await admin_start_handler(message, state=state)
 
 
 async def start_menu_admin(callback: CallbackQuery, state: FSMContext) -> None:
@@ -281,23 +273,29 @@ async def edit_channel(message: Message, state: FSMContext) -> None:
 
 
 @logger.catch
-async def mailing_list(message: Message, state: FSMContext) -> None:
+async def mailing_list() -> int:
     """
     Функция отправляет ссылки на оплату всем
     пользователям из листа ожидания у кого есть телеграм ид
     """
-    value: str = message.text
+    value: str = Text.get_link_paid_waiting_list()
 
     users = User.get_users_from_waiting_list()
-    for telegram_id in users:
-        try:
-            await bot.send_message(telegram_id, value)
-        except Exception as err:
-            logger.error(err)
-    callback = CallbackQuery()
-    callback.message = message
-    callback.id = message.message_id
-    callback.from_user = message.from_user
-    callback.data = get_state_name(AdminState.edit_channel_list)
+    count = 0
+    await mailing_new_status([User.get_users_by_telegram_id(5250931805)])
+    # for telegram_id in users:
+    #     try:
+    #         await bot.send_message(telegram_id, value, reply_markup=link_menu())
+    #         count += 1
+    #     except Exception as err:
+    #         logger.error(err)
+    #
+    # return count
 
-    await start_menu_admin(callback=callback, state=state)
+    # callback = CallbackQuery()
+    # callback.message = message
+    # callback.id = message.message_id
+    # callback.from_user = message.from_user
+    # callback.data = get_state_name(AdminState.edit_channel_list)
+    #
+    # await start_menu_admin(callback=callback, state=state)

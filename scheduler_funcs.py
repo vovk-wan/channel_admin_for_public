@@ -16,6 +16,7 @@ from get_channel_info import get_channel_data
 from getcourse_requests import get_data, make_user_list_by_group, make_groups_list
 from models import User, Channel, Group, Statuses, SourceData, GetcourseGroup, MessageNewStatus
 from keyboards.admin import admin as keyboard_admin
+from keyboards.user import make_keyboard_for_mailing
 
 
 @logger.catch
@@ -30,6 +31,20 @@ async def send_message_to_admin(text: str, keyboard: InlineKeyboardMarkup = None
 
         except Exception as err:
             logger.error(err)
+
+
+async def mailing_new_status(users: list):
+    """Отправляет сообщение пользователям о смене статуса"""
+    messages: dict = MessageNewStatus.get_messages()
+    for user in users:
+        telegram_id = user.telegram_id
+        text = messages.get(user.status, '').strip()
+        if text:
+            try:
+                keyboard = make_keyboard_for_mailing(user.status, user.got_invite)
+                await bot.send_message(chat_id=telegram_id, text=text, reply_markup=keyboard)
+            except Exception as err:
+                logger.error(f'{err.__traceback__.tb_frame}\n{err}')
 
 
 @ logger.catch
@@ -177,19 +192,6 @@ def add_new_users(data: list, source: str) -> int:
     :return:
     """
     return User.update_users(users=data, source=source)
-
-
-async def mailing_new_status(users: list):
-    """Отправляет сообщение пользователям о смене статуса"""
-    messages: dict = MessageNewStatus.get_messages()
-    for user in users:
-        telegram_id = user.telegram_id
-        text = messages.get(user.status, '').strip()
-        if text:
-            try:
-                await bot.send_message(chat_id=telegram_id, text=text)
-            except Exception as err:
-                logger.error(f'{err.__traceback__.tb_frame}\n{err}')
 
 
 @logger.catch

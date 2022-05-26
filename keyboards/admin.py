@@ -15,7 +15,7 @@ def cancel_keyboard() -> 'ReplyKeyboardMarkup':
 
 
 @logger.catch
-def admin_menu() -> InlineKeyboardMarkup:
+def admin_menu(*args, **kwargs) -> InlineKeyboardMarkup:
 
     keyboard_menu = InlineKeyboardMarkup(row_width=1)
 
@@ -31,7 +31,7 @@ def admin_menu() -> InlineKeyboardMarkup:
 
 
 @logger.catch
-def cancel_edit_channel() -> InlineKeyboardMarkup:
+def cancel_edit_channel(*args, **kwargs) -> InlineKeyboardMarkup:
 
     return InlineKeyboardMarkup(row_width=1).add(
             InlineKeyboardButton(text='Отмена', callback_data='edit_channel_list')
@@ -39,7 +39,7 @@ def cancel_edit_channel() -> InlineKeyboardMarkup:
 
 
 @logger.catch
-def cancel() -> InlineKeyboardMarkup:
+def cancel(*args, **kwargs) -> InlineKeyboardMarkup:
 
     return InlineKeyboardMarkup(row_width=1).add(
             InlineKeyboardButton(text='Отмена', callback_data='about')
@@ -47,7 +47,7 @@ def cancel() -> InlineKeyboardMarkup:
 
 
 @logger.catch
-def admin() -> InlineKeyboardMarkup:
+def admin(*args, **kwargs) -> InlineKeyboardMarkup:
 
     return InlineKeyboardMarkup(row_width=1).add(
             InlineKeyboardButton(text='admin', callback_data='start_admin')

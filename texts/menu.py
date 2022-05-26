@@ -39,7 +39,7 @@ class TextsUser:
     wait_list: str = lambda: 'Вы в листе ожидания'
 
     # Текст сопровождение со ссылкой
-    get_invite_link: str = lambda: ''
+    get_invite_link: str = lambda: 'текст под ссылками на каналы'
 
     @classmethod
     @logger.catch

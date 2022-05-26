@@ -32,7 +32,9 @@ class DefaultTexts:
     prices: str = 'Текст с ценами'
     reviews: str = 'Текст с отзывами'
     goodbye: str = 'Текст goodbye'
-    link_waiting_list: str = 'https://'
+    link_waiting_list: str = 'https://getcourse.io/'
+    link_paid_excluded: str = 'https://getcourse.io/'
+    link_paid_waiting_list: str = 'https://getcourse.io/'
 
 
 class BaseModel(Model):
@@ -51,6 +53,9 @@ class Text(BaseModel):
     reviews = TextField(verbose_name='Текст с отзывами')
     goodbye = TextField(verbose_name='Текст goodbye')
     link_waiting_list = CharField(verbose_name='Ссылка на лист ожидания')
+    link_paid_excluded = CharField(verbose_name='Ссылка на оплату для исключенных')
+    link_paid_waiting_list = CharField(
+        verbose_name='Ссылка на оплату пользователям в листе ожидания')
 
     class Meta:
         db_table = "text_messages"
@@ -102,6 +107,22 @@ class Text(BaseModel):
         if not data:
             data = DefaultTexts
         return data.link_waiting_list
+
+    @classmethod
+    @logger.catch
+    def get_link_paid_excluded(cls):
+        data = cls.select().first()
+        if not data:
+            data = DefaultTexts
+        return data.link_paid_excluded
+
+    @classmethod
+    @logger.catch
+    def get_link_paid_waiting_list(cls):
+        data = cls.select().first()
+        if not data:
+            data = DefaultTexts
+        return data.link_paid_waiting_list
 
 
 class MessageNewStatus(BaseModel):
@@ -184,8 +205,8 @@ class Channel(BaseModel):
     @logger.catch
     def get_channels(cls) -> list:
         """Функция возвращает список каналов"""
-        channel = [chanel for chanel in cls.select().execute()]
-        return channel if channel else []
+        channel = cls.select().execute()
+        return [chanel for chanel in channel] if channel else []
 
     @classmethod
     @logger.catch
@@ -247,16 +268,12 @@ class User(BaseModel):
      """
     getcourse_id = CharField(
         default=None, null=True, unique=True, verbose_name="id пользователя в getcourse")
-    phone = CharField(unique=True, verbose_name="id пользователя в телеграмм")
+    phone = CharField(unique=True, verbose_name="Телефон пользователя")
     telegram_id = BigIntegerField(
         unique=True, default=None, null=True, verbose_name="id пользователя в телеграмм")
-    admin = BooleanField(default=False, verbose_name="Администраторство")
-    # -------------- update
     status = CharField(max_length=50, verbose_name='Статус пользователя')
     # статус обновлен
     status_updated = BooleanField(default=True, verbose_name='Обновлен статус')
-    # в клубе, доступ оплачен, в основной группе
-    member = BooleanField(default=False, verbose_name='Член клуба')
     # получал инвайт ссылку
     got_invite = BooleanField(default=False, verbose_name='Получал инвайт ссылку')
     expiration_date = DateTimeField(

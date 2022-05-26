@@ -11,6 +11,7 @@ from aiogram.types.chat import ChatInviteLink
 from aiogram.dispatcher import FSMContext
 import aiogram.utils.exceptions
 from config import logger, Dispatcher, bot, EMOJI, LINK_EXPIRATION_TIME, admins_list
+from handlers.utils import get_user_position
 from models import User, Channel
 from states import MenuState, AdminState, get_state_name
 from keyboards import user
@@ -56,13 +57,13 @@ async def cancel_handler(message: Message, state: FSMContext) -> None:
 @logger.catch
 async def start_menu_handler(message: Message, state: FSMContext) -> None:
     """
-    todo сделать обработку когда всё поудаляли
         Функция - приветствие
         выводит основное меню и сообщение - основу под все кнопки
     """
 
     text = TextsUser.start()
     chat_id = message.chat.id
+    telegram_id = message.from_user.id
     await state.set_state(MenuState.start)
     data = await state.get_data()
     contact_message = data.get('contact_message')
@@ -72,7 +73,7 @@ async def start_menu_handler(message: Message, state: FSMContext) -> None:
         await state.set_data(data)
     start_message = data.get('start_message')
     if not start_message:
-        start_message = await message.answer(text=text, reply_markup=user.start_())
+        start_message = await message.answer(text=text, reply_markup=user.start_(telegram_id=telegram_id))
         await state.update_data(start_message=start_message.message_id)
         return
     try:
@@ -80,7 +81,7 @@ async def start_menu_handler(message: Message, state: FSMContext) -> None:
             text=text,
             chat_id=chat_id,
             message_id=start_message,
-            reply_markup=user.start_(),
+            reply_markup=user.start_(telegram_id=telegram_id),
         )
     except aiogram.utils.exceptions.MessageNotModified as err:
         logger.error(err)
@@ -111,12 +112,11 @@ async def user_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
     if name_state == 'want':
         name_state = utils.get_user_position(telegram_id)
     text = TextsUser.get_menu_text(name_state)()
-    keyboard = Keyboard.get_menu_keyboard(name_state)()
+    keyboard = Keyboard.get_menu_keyboard(name_state)(telegram_id=telegram_id)
 
     await state.set_state(MenuState.get_state_by_name(callback.data))
     start_message = data.get('start_message')
     if not start_message:
-        # TODO заполнить проверить все варианты
         logger.debug('deleted start menu')
         return
 
@@ -132,19 +132,33 @@ async def user_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
         return
     elif name_state == 'get_invite_link':
         # channel_id = Channel.get_channel()
-        links = await get_link(telegram_id=telegram_id)
-        if not links:
-            bot.answer_callback_query(callback.id, 'при формировании ссылок произошла ошибка\n'
-                                                   'обратитесь к администратору')
-        links_str = "\n".join(links)
-        text = f'{text} \n{links_str}'
-        await bot.edit_message_text(text=text, chat_id=chat_id, message_id=start_message)
+        await state.set_state(MenuState.start)
+        access, links = await get_link(telegram_id=telegram_id)
+
+        if access:
+            if links:
+                links_str = "\n".join(links)
+                text = f'{links_str}\n{text}'
+                await bot.edit_message_text(text=text, chat_id=chat_id, message_id=start_message)
+
+                text = TextsUser.get_menu_text('start')()
+                keyboard = Keyboard.get_menu_keyboard('start')(telegram_id=telegram_id)
+                start_message = await bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
+                await state.update_data({'start_message': start_message.message_id})
+                return
+            await bot.answer_callback_query(
+                callback.id,
+                'при формировании ссылок произошла ошибка\nобратитесь к администратору'
+            )
+        else:
+            await bot.answer_callback_query(
+                callback_query_id=callback.id,
+                text='вы не в клубе или ссылка уже была отправлена'
+            )
 
         text = TextsUser.get_menu_text('start')()
-        keyboard = Keyboard.get_menu_keyboard('start')()
-        start_message = await bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
-        await state.update_data(contact_message=start_message.message_id)
-        return
+        keyboard = Keyboard.get_menu_keyboard('start')(telegram_id=telegram_id)
+        await callback.answer()
     try:
         await bot.edit_message_text(
             text=text, chat_id=chat_id, message_id=start_message, reply_markup=keyboard)
@@ -182,12 +196,15 @@ async def add_phone_number(message: Message, state: FSMContext):
     await user_menu_handler(callback, state)
 
 
-async def get_link(telegram_id: int) -> list:
+async def get_link(telegram_id: int) -> tuple:
     """function for make invite link"""
     # channel_id = Channel.get_channel()
     # if not channel_id:
     #     return
+    access = True
     links = []
+    if not get_user_position(telegram_id=telegram_id) == get_state_name(MenuState.club_not_got_link):
+        return False, links
     expire_date = datetime.datetime.now() + datetime.timedelta(hours=LINK_EXPIRATION_TIME)
     channels = []
     data = Channel.get_channels()
@@ -221,4 +238,4 @@ async def get_link(telegram_id: int) -> list:
         except Exception as err:
             logger.error(err)
 
-    return links
+    return access, links
