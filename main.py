@@ -45,7 +45,7 @@ async def on_startup(_) -> None:
 
     logger.info('Bot started at:', datetime.datetime.now())
     logger.info("BOT POLLING ONLINE")
-    # edit_group_list()  # TODO включить в релизе
+    edit_group_list()  # TODO включить в релизе
     asyncio.create_task(check_base())  # TODO включить в релизе
 
 
