@@ -53,7 +53,7 @@ class Text(BaseModel):
     reviews = TextField(verbose_name='Текст с отзывами')
     goodbye = TextField(verbose_name='Текст goodbye')
     link_waiting_list = CharField(verbose_name='Ссылка на лист ожидания')
-    link_paid_club = CharField(verbose_name='Ссылка на оплату для исключенных')
+    link_paid_excluded = CharField(verbose_name='Ссылка на оплату для исключенных')
     link_paid_waiting_list = CharField(
         verbose_name='Ссылка на оплату пользователям в листе ожидания')
 

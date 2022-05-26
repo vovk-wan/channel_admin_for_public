@@ -11,7 +11,8 @@ class Text(models.Model):
     reviews = models.TextField(verbose_name='Текст с отзывами')
     goodbye = models.TextField(verbose_name='Текст goodbye')
     link_waiting_list = models.CharField(max_length=255, verbose_name='Ссылка на лист ожидания')
-    link_paid_club = models.CharField(max_length=255, verbose_name='Ссылка на оплату для исключенных')
+    link_paid_excluded = models.CharField(
+        max_length=255, verbose_name='Ссылка на оплату для исключенных')
     link_paid_waiting_list = models.CharField(
         max_length=255, verbose_name='Ссылка на оплату рассылки пользователям в листе ожидания')
 
