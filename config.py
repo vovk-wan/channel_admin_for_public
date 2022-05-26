@@ -37,7 +37,7 @@ with open(f"{BASE_DIR}/db/session.txt", 'r', encoding='utf-8') as f:
 
 # set admins list
 me = os.getenv("ME_TELEGRAM_ID")
-admins_list = [me]#, '305353027']
+admins_list = [me, '259984017', '455814456']#, '305353027']
 DEBUG = int(os.getenv("DEBUG"))
 if not DEBUG:
     admins_list.extend({})
