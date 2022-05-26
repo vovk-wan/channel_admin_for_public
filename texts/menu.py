@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import Callable
+
+from config import logger
 from models import Text
-from config import logger, EMOJI
 
 
 @dataclass
@@ -17,7 +18,7 @@ class TextsUser:
     prices: str = Text.get_prices_text
 
     # Отзывы
-    reviews: str = lambda: 'Отзывы'
+    reviews: str = Text.get_reviews_text
 
     # Текст после хочу в клуб если нет в базе телеграм ид
     not_in_base: str = lambda: 'Вы впервые в клубе'
@@ -26,10 +27,10 @@ class TextsUser:
     challenger: str = lambda: 'Вы впервые в клубе'
 
     # Текст после хочу в клуб если оплатил в клубе и не получал ссылку
-    club_not_got_link: str = lambda :'Вы оплатили, нажмите на кнопку чтоб получить ссылку'
+    club_not_got_link: str = lambda: 'Вы оплатили, нажмите на кнопку чтоб получить ссылку'
 
-    # Текст после хочу в клуб уже оплатил уже в клубе, но получал ссылку
-    club_got_link: str = lambda:'Вы уже получали ссылку'
+    # Текст после хочу в клуб, уже оплатил уже в клубе, но получал ссылку
+    club_got_link: str = lambda: 'Вы уже получали ссылку'
 
     # Текст после хочу в клуб если не оплатил, но был уже в клубе
     excluded: str = lambda: 'Вы уже были в клубе, нажмите на кнопу чтоб перейти по ссылке на оплату'
@@ -38,7 +39,7 @@ class TextsUser:
     wait_list: str = lambda: 'Вы в листе ожидания'
 
     # Текст сопровождение со ссылкой
-    get_invite_link: str = lambda: 'get invite link'
+    get_invite_link: str = lambda: ''
 
     @classmethod
     @logger.catch
@@ -52,7 +53,7 @@ class TextsUser:
 
 @dataclass
 class AdminTexts:
-    """TODO Заменить на запросы к бд"""
+    """Тексты в меню администратора"""
     #  текст стартового меню администраторов
     start_admin: str = lambda: "Hello admin"
 
