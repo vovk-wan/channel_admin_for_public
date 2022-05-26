@@ -282,15 +282,15 @@ async def mailing_list() -> int:
 
     users = User.get_users_from_waiting_list()
     count = 0
-    await mailing_new_status([User.get_users_by_telegram_id(5250931805)])
-    # for telegram_id in users:
-    #     try:
-    #         await bot.send_message(telegram_id, value, reply_markup=link_menu())
-    #         count += 1
-    #     except Exception as err:
-    #         logger.error(err)
-    #
-    # return count
+
+    for telegram_id in users:
+        try:
+            await bot.send_message(telegram_id, value, reply_markup=link_menu())
+            count += 1
+        except Exception as err:
+            logger.error(err)
+
+    return count
 
     # callback = CallbackQuery()
     # callback.message = message

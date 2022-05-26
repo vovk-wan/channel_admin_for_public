@@ -302,8 +302,8 @@ async def kick_hackers():
 
 @logger.catch
 async def check_base():
-    # aioschedule.every(REQUEST_RATE).minutes.do(channel_maintenance)
-    # aioschedule.every(KICK_RATE).minutes.do(kick_hackers)
+    aioschedule.every(REQUEST_RATE).minutes.do(channel_maintenance)
+    aioschedule.every(KICK_RATE).minutes.do(kick_hackers)
     while True:
         await aioschedule.run_pending()
         await asyncio.sleep(1)
