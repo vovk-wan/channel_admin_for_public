@@ -34,7 +34,6 @@ class Keyboard:
     not_in_base: ReplyKeyboardMarkup = user.not_in_base_
     get_invite_link: ReplyKeyboardMarkup = user.not_in_base_
 
-
     @classmethod
     def get_menu_keyboard(cls, name: str):
         try:
@@ -208,18 +207,18 @@ async def get_link(telegram_id: int) -> list:
         #     await bot.unban_chat_member(channel_id, telegram_id)
         except Exception as exc:
             logger.error(f'{exc.__traceback__.tb_frame}\n{exc}')
-        if channel.type == 'channel':
 
-            try:
-                # link: ChatInviteLink = await bot.create_chat_invite_link(
-                #     channel_id, expire_date.timestamp(), 1)
-                # return link.invite_link
-                link: ChatInviteLink = await channel.create_invite_link(
-                    expire_date=expire_date,
-                    member_limit=1
-                )
-                links.append(link.invite_link)
-                User.got_invited(telegram_id=telegram_id)
-            except Exception as err:
-                logger.error(err)
+        try:
+            # link: ChatInviteLink = await bot.create_chat_invite_link(
+            #     channel_id, expire_date.timestamp(), 1)
+            # return link.invite_link
+            link: ChatInviteLink = await channel.create_invite_link(
+                expire_date=expire_date,
+                member_limit=1
+            )
+            links.append(f'{channel.full_name}\n{link.invite_link}')
+            User.got_invited(telegram_id=telegram_id)
+        except Exception as err:
+            logger.error(err)
+
     return links
