@@ -1,4 +1,5 @@
 """Модуль с клавиатурами и кнопками"""
+import aiogram.utils.exceptions
 from aiogram.types import (
     ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton)
 
@@ -109,9 +110,20 @@ def about_(*args, **kwargs) -> InlineKeyboardMarkup:
 
 
 @logger.catch
-def link_menu(*args, **kwargs) -> InlineKeyboardMarkup:
-
-    return InlineKeyboardMarkup().add(link_menu())
+def link_pay_waiting_list_menu(*args, **kwargs) -> InlineKeyboardMarkup:
+    url: str = Text.get_link_to_pay()
+    try:
+        keyboard = InlineKeyboardMarkup().add(
+            inline_button_link_user_menu(),
+            InlineKeyboardButton(text='Ссылка на оплату', callback_data='get_user_menu', url=url),
+        )
+    except aiogram.utils.exceptions.ButtonURLInvalid as err:
+        logger.error(err)
+        keyboard = InlineKeyboardMarkup().add(
+            inline_button_link_user_menu(),
+            InlineKeyboardButton(text='Произошла ошибка', callback_data='get_user_menu'),
+        )
+    return keyboard
 
 
 @logger.catch
@@ -126,9 +138,11 @@ def want_(*args, **kwargs) -> InlineKeyboardMarkup:
 @logger.catch
 def excluded_(*args, **kwargs) -> InlineKeyboardMarkup:
     """TODO добавить ссылку на оплату """
+    url: str = Text.get_link_to_pay()
+
     return InlineKeyboardMarkup(row_width=2).add(
             inline_button_start(),
-            InlineKeyboardButton(text='Ссылка на оплату', callback_data='скорее всего просто ссылка'),
+            InlineKeyboardButton(text='Ссылка на оплату', callback_data='start', url=url),
     )
 
 

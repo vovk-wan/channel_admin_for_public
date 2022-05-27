@@ -11,10 +11,10 @@ from config import logger, bot, admins_list
 from keyboards import admin
 from models import GetcourseGroup, Channel, User, Text
 from models import Group
-from scheduler_funcs import mailing_new_status
+from scheduler_funcs import mailing_new_status, send_message_to_admin
 from states import AdminState, get_state_name
 from texts.menu import AdminTexts
-from keyboards.user import link_menu
+from keyboards.user import link_pay_waiting_list_menu
 
 
 @dataclass
@@ -36,7 +36,7 @@ class AdminKeyboard:
             logger.info(err)
             return cls.user_menu
 
-
+@logger.catch
 async def start_menu_admin(callback: CallbackQuery, state: FSMContext) -> None:
     """ Admin menu"""
     name_state = callback.data
@@ -47,9 +47,9 @@ async def start_menu_admin(callback: CallbackQuery, state: FSMContext) -> None:
     group_id = GetcourseGroup.get_waiting_group()
     waiting_group_name = Group.get_name_group_by_id(group_id)
     groups += f'\nтекущая группа для листа ожидания "{waiting_group_name}-{group_id}'
-    channel_names = Channel.get_channels()
-    channel_list = "\n".join(f'{channel.name} - {channel.channel_id}' for channel in channel_names)
-    channels = f'\n\nтекущие каналы \n {channel_list}'
+    channel_list = Channel.get_channels()
+    channel_names = "\n".join(f'{channel.name} - {channel.channel_id}' for channel in channel_list)
+    channels = f'\n\nтекущие каналы \n {channel_names}'
 
     text = AdminTexts.get_menu_text(name_state)()
     text = text + groups + channels
@@ -114,7 +114,10 @@ async def group_registration(callback: CallbackQuery, state: FSMContext) -> None
             await bot.edit_message_text(
                 text=text, chat_id=chat_id, message_id=start_message, reply_markup=keyboard_group)
 
-        except aiogram.utils.exceptions.MessageNotModified as err:
+        except (
+                        aiogram.utils.exceptions.MessageNotModified,
+                        aiogram.utils.exceptions.MessageTextIsEmpty
+                ) as err:
             logger.error(err)
         await callback.answer()
 
@@ -207,7 +210,10 @@ async def channel_registration(callback: CallbackQuery, state: FSMContext) -> No
                 reply_markup=keyboard_group
             )
 
-        except aiogram.utils.exceptions.MessageNotModified as err:
+        except (
+                        aiogram.utils.exceptions.MessageNotModified,
+                        aiogram.utils.exceptions.MessageTextIsEmpty
+                ) as err:
             logger.error(err)
 
 
@@ -230,7 +236,10 @@ async def wait_text(callback: CallbackQuery, state: FSMContext) -> None:
                 reply_markup=keyboard
             )
 
-        except aiogram.utils.exceptions.MessageNotModified as err:
+        except (
+                        aiogram.utils.exceptions.MessageNotModified,
+                        aiogram.utils.exceptions.MessageTextIsEmpty
+                ) as err:
             logger.error(err)
         await callback.answer()
 
@@ -278,18 +287,24 @@ async def mailing_list() -> int:
     Функция отправляет ссылки на оплату всем
     пользователям из листа ожидания у кого есть телеграм ид
     """
-    value: str = Text.get_link_paid_waiting_list()
+    value: str = Text.get_for_mailing_text()
 
     users = User.get_users_from_waiting_list()
     count = 0
 
     for telegram_id in users:
+        keyboard = link_pay_waiting_list_menu()
         try:
-            await bot.send_message(telegram_id, value, reply_markup=link_menu())
+            await bot.send_message(telegram_id, value, reply_markup=keyboard)
             count += 1
         except Exception as err:
             logger.error(err)
-
+        except aiogram.utils.exceptions.ButtonURLInvalid as err:
+            urls = [button.url for row in keyboard.inline_keyboard for button in row if button.url]
+            logger.error(err)
+            await send_message_to_admin(f'[Error]\n'
+                                        f'рассылка для листа ожидания'
+                                        f'неверные ссылки в DB {urls}')
     return count
 
     # callback = CallbackQuery()

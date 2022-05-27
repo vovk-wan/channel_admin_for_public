@@ -12,34 +12,34 @@ class TextsUser:
     start: Callable = Text.get_start_text
 
     # Текст о клубе
-    about: str = Text.get_about_text
+    about: Callable = Text.get_about_text
 
     # Текст Прайс
-    prices: str = Text.get_prices_text
+    prices: Callable = Text.get_prices_text
 
     # Отзывы
-    reviews: str = Text.get_reviews_text
+    reviews: Callable = Text.get_reviews_text
 
     # Текст после хочу в клуб если нет в базе телеграм ид
-    not_in_base: str = lambda: 'Вы впервые в клубе'
+    not_in_base: Callable = Text.get_want_for_get_phone_text
 
     # Текст после хочу в клуб, но в базе только как претендент
-    challenger: str = lambda: 'Вы впервые в клубе'
+    challenger: Callable = Text.get_want_for_challenger_text
 
     # Текст после хочу в клуб если оплатил в клубе и не получал ссылку
-    club_not_got_link: str = lambda: 'Вы оплатили, нажмите на кнопку чтоб получить ссылку'
+    club_not_got_link: Callable = Text.get_want_for_entered_text
 
     # Текст после хочу в клуб, уже оплатил уже в клубе, но получал ссылку
-    club_got_link: str = lambda: 'Вы уже получали ссылку'
+    club_got_link: Callable = Text.get_want_for_entered_got_link_text
 
     # Текст после хочу в клуб если не оплатил, но был уже в клубе
-    excluded: str = lambda: 'Вы уже были в клубе, нажмите на кнопу чтоб перейти по ссылке на оплату'
+    excluded: Callable = Text.get_want_for_excluded_text
 
     # Текст если есть в листе ожидания
-    wait_list: str = lambda: 'Вы в листе ожидания'
+    wait_list: Callable = Text.get_want_for_waiting_list_text
 
     # Текст сопровождение со ссылкой
-    get_invite_link: str = lambda: 'текст под ссылками на каналы'
+    get_invite_link: Callable = Text.get_for_invite_text
 
     @classmethod
     @logger.catch

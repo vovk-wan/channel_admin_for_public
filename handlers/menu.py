@@ -19,6 +19,7 @@ from states import MenuState, AdminState, get_state_name
 @logger.catch
 async def get_user_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
     await state.finish()
+    callback.message.from_user.id = callback.from_user.id
     await start_menu_handler(callback.message, state=state)
     await callback.answer()
 

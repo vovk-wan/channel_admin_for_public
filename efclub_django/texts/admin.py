@@ -3,14 +3,15 @@ from texts.models import Channel, User, UserStatus, Text, Group, GetcourseGroup,
 # Register your models here.
 # from models import UserStatus
 
-#
+# TODO проверить все имена
 # class UserStatusAdmin(admin.ModelAdmin):
 #     pass
 
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ['telegram_id', 'status', 'phone', 'expiration_date', ]
+    list_display = ['phone', 'telegram_id', 'status', 'expiration_date', ]
     list_filter = ['got_invite']
+    search_fields = ['phone']
 
 
 class TextAdmin(admin.ModelAdmin):

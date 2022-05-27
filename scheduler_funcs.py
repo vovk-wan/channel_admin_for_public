@@ -283,7 +283,7 @@ async def kick_hackers():
         logger.info('scheduler_func.kick_hackers: No channel')
         return
 
-    all_users: List[int] = User.get_users_not_admins()
+    all_users: List[int] = User.get_users_which_can_be_chat()
     for channel_data in channels:
         channel_id = channel_data.channel_id
         try:

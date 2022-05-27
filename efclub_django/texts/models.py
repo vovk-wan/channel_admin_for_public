@@ -5,21 +5,28 @@ from django.db import models
 
 class Text(models.Model):
     """Class for text message table"""
-    start = models.TextField(verbose_name='Тест в основном меню')
+    start = models.TextField(verbose_name='Текст в основном меню')
     about = models.TextField(verbose_name='Текст о клубе')
     prices = models.TextField(verbose_name='Текст с ценами')
     reviews = models.TextField(verbose_name='Текст с отзывами')
-    goodbye = models.TextField(verbose_name='Текст goodbye')
+    for_mailing = models.TextField(verbose_name='Текст в рассылки на оплату')
+    for_invite = models.TextField(verbose_name='Текст вместе с инвайт ссылками')
+    for_get_phone = models.TextField(verbose_name='Текст с запросом контакта')
+    for_challenger = models.TextField(verbose_name='"Хочу в клуб" новичков')
+    for_waiting_list = models.TextField(verbose_name='"Хочу в клуб" для листа ожидания')
+    for_excluded = models.TextField(verbose_name='"Хочу в клуб" исключенных')
+    for_entered = models.TextField(verbose_name='"Хочу в клуб" для тех кто может получить ссылку')
+    for_entered_got_link = models.TextField(verbose_name='"Хочу в клуб" для тех кто уже получал ссылку')
+
     link_waiting_list = models.CharField(max_length=255, verbose_name='Ссылка на лист ожидания')
-    link_paid_excluded = models.CharField(
-        max_length=255, verbose_name='Ссылка на оплату для исключенных')
-    link_paid_waiting_list = models.CharField(
-        max_length=255, verbose_name='Ссылка на оплату рассылки пользователям в листе ожидания')
+    link_to_pay_excluded = models.CharField(
+        max_length=255, verbose_name='Ссылка на оплату')
 
     class Meta:
         db_table = "text_messages"
         verbose_name = 'Текст в меню'
         verbose_name_plural = 'Тексты в меню'
+
 
 class GetcourseGroup(models.Model):
     waiting_group_id = models.CharField(
@@ -41,8 +48,8 @@ class Channel(models.Model):
 
 class Group(models.Model):
     """Клас для хранения и работы с группами"""
-    id = models.IntegerField(primary_key=True, verbose_name='id группы')
-    name = models.IntegerField(verbose_name='id канала')
+    group_id = models.IntegerField(primary_key=True, verbose_name='id группы')
+    name = models.CharField(max_length=255, verbose_name='id канала')
 
     class Meta:
         db_table = "groups"
@@ -53,8 +60,6 @@ class UserStatus(models.Model):
     Model for table users_status
     Table messages for statuses
     """
-
-    challenger = models.TextField(verbose_name='Сообщение подаче заявки')
     waiting = models.TextField(verbose_name='Сообщение при попадании в список ожидания')
     entered = models.TextField(verbose_name='Сообщение при вступлении в клуб')
     returned = models.TextField(verbose_name='Сообщение при возвращении в клуб после исключения')

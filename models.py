@@ -29,9 +29,17 @@ class Statuses:
 class DefaultTexts:
     start: str = 'Тест в основном меню'
     about: str = 'Текст о клубе'
-    prices: str = 'Текст с ценами'
+    prices: str = 'Текст о тарифах'
     reviews: str = 'Текст с отзывами'
-    goodbye: str = 'Текст goodbye'
+    for_mailing: str = 'Текст со ссылкой на оплату'
+    for_invite: str = 'Текст вместе с пригласительными ссылками'
+    for_get_phone: str = 'Текст для запроса контакта'
+    for_challenger: str = '"Хочу в клуб" новичков'
+    for_waiting_list: str = '"Хочу в клуб" для листа ожидания'
+    for_excluded: str = '"Хочу в клуб" исключенных'
+    for_entered: str = '"Хочу в клуб" для тех кто может получить ссылку'
+    for_entered: str = '"Хочу в клуб" для тех кто получал ссылку'
+
     link_waiting_list: str = 'https://getcourse.io/'
     link_paid_excluded: str = 'https://getcourse.io/'
     link_paid_waiting_list: str = 'https://getcourse.io/'
@@ -47,15 +55,23 @@ class BaseModel(Model):
 
 class Text(BaseModel):
     """Class for text message table"""
-    start = TextField(verbose_name='Тест в основном меню')
+    start = TextField(verbose_name='Текст в основном меню')
     about = TextField(verbose_name='Текст о клубе')
     prices = TextField(verbose_name='Текст с ценами')
     reviews = TextField(verbose_name='Текст с отзывами')
-    goodbye = TextField(verbose_name='Текст goodbye')
+    for_mailing = TextField(verbose_name='Текст в рассылки на оплату')
+    for_invite = TextField(verbose_name='Текст вместе с инвайт ссылками')
+    for_get_phone = TextField(verbose_name='Текст с запросом контакта')
+    for_challenger = TextField(verbose_name='"Хочу в клуб" новичков')
+    for_waiting_list = TextField(verbose_name='"Хочу в клуб" для листа ожидания')
+    for_excluded = TextField(verbose_name='"Хочу в клуб" исключенных')
+    for_entered = TextField(verbose_name='"Хочу в клуб" для тех кто может получить ссылку')
+    for_entered_got_link = TextField(verbose_name='"Хочу в клуб" для тех кто уже получал ссылку')
+
     link_waiting_list = CharField(verbose_name='Ссылка на лист ожидания')
-    link_paid_excluded = CharField(verbose_name='Ссылка на оплату для исключенных')
-    link_paid_waiting_list = CharField(
-        verbose_name='Ссылка на оплату пользователям в листе ожидания')
+    # link_to_pay_excluded = CharField(verbose_name='Ссылка на оплату для исключенных')
+    # link_to_pay_waiting_list = CharField(
+    #     verbose_name='Ссылка на оплату пользователям в листе ожидания')
 
     class Meta:
         db_table = "text_messages"
@@ -63,6 +79,7 @@ class Text(BaseModel):
     @classmethod
     @logger.catch
     def get_start_text(cls):
+        """Возвращает текст в основном меню"""
         data = cls.select().first()
         if not data:
             data = DefaultTexts
@@ -71,6 +88,7 @@ class Text(BaseModel):
     @classmethod
     @logger.catch
     def get_about_text(cls):
+        """Возвращает Текст о клубе"""
         data = cls.select().first()
         if not data:
             data = DefaultTexts
@@ -79,6 +97,7 @@ class Text(BaseModel):
     @classmethod
     @logger.catch
     def get_prices_text(cls):
+        """Возвращает Текст с ценами"""
         data = cls.select().first()
         if not data:
             data = DefaultTexts
@@ -87,6 +106,7 @@ class Text(BaseModel):
     @classmethod
     @logger.catch
     def get_reviews_text(cls):
+        """Возвращает Текст с отзывами"""
         data = cls.select().first()
         if not data:
             data = DefaultTexts
@@ -94,15 +114,80 @@ class Text(BaseModel):
 
     @classmethod
     @logger.catch
-    def get_goodbye_text(cls):
+    def get_for_mailing_text(cls):
+        """Возвращает Текст в рассылки на оплату"""
         data = cls.select().first()
         if not data:
             data = DefaultTexts
-        return data.goodbye
+        return data.for_mailing
+
+    @classmethod
+    @logger.catch
+    def get_for_invite_text(cls):
+        """Возвращает Текст вместе с инвайт ссылками"""
+        data = cls.select().first()
+        if not data:
+            data = DefaultTexts
+        return data.for_invite
+
+    @classmethod
+    @logger.catch
+    def get_want_for_get_phone_text(cls):
+        """Возвращает Текст с запросом контакта"""
+        data = cls.select().first()
+        if not data:
+            data = DefaultTexts
+        return data.for_get_phone
+
+    @classmethod
+    @logger.catch
+    def get_want_for_challenger_text(cls):
+        """Возвращает "Хочу в клуб" новичков"""
+        data = cls.select().first()
+        if not data:
+            data = DefaultTexts
+        return data.for_challenger
+
+    @classmethod
+    @logger.catch
+    def get_want_for_waiting_list_text(cls):
+        """Возвращает "Хочу в клуб" для листа ожидания"""
+        data = cls.select().first()
+        if not data:
+            data = DefaultTexts
+        return data.for_waiting_list
+
+    @classmethod
+    @logger.catch
+    def get_want_for_excluded_text(cls):
+        """Возвращает "Хочу в клуб" исключенных"""
+        data = cls.select().first()
+        if not data:
+            data = DefaultTexts
+        return data.for_excluded
+
+    @classmethod
+    @logger.catch
+    def get_want_for_entered_text(cls):
+        """Возвращает "Хочу в клуб" для тех кто может получить ссылку"""
+        data = cls.select().first()
+        if not data:
+            data = DefaultTexts
+        return data.for_entered
+
+    @classmethod
+    @logger.catch
+    def get_want_for_entered_got_link_text(cls):
+        """Возвращает "Хочу в клуб" для тех кто уже получал ссылку"""
+        data = cls.select().first()
+        if not data:
+            data = DefaultTexts
+        return data.for_entered_got_link
 
     @classmethod
     @logger.catch
     def get_link_waiting_list_text(cls):
+        """Возвращает ссылку в лист ожидания"""
         data = cls.select().first()
         if not data:
             data = DefaultTexts
@@ -110,29 +195,39 @@ class Text(BaseModel):
 
     @classmethod
     @logger.catch
-    def get_link_paid_excluded(cls):
+    def get_link_to_pay(cls):
+        """Возвращает ссылку на оплату"""
         data = cls.select().first()
         if not data:
             data = DefaultTexts
         return data.link_paid_excluded
 
-    @classmethod
-    @logger.catch
-    def get_link_paid_waiting_list(cls):
-        data = cls.select().first()
-        if not data:
-            data = DefaultTexts
-        return data.link_paid_waiting_list
+    # @classmethod
+    # @logger.catch
+    # def get_link_paid_excluded(cls):
+    #     """Возвращает ссылку на оплату для тех кто был в клубе"""
+    #     data = cls.select().first()
+    #     if not data:
+    #         data = DefaultTexts
+    #     return data.link_paid_excluded
+
+    # @classmethod
+    # @logger.catch
+    # def get_link_paid_waiting_list(cls):
+    #     """Возвращает ссылку на оплату для листа ожидания"""
+    #     data = cls.select().first()
+    #     if not data:
+    #         data = DefaultTexts
+    #     return data.link_paid_waiting_list
 
 
 class MessageNewStatus(BaseModel):
     """Class for text message  table"""
-    challenger = TextField(verbose_name='Тест после отправки номера телефона')
     waiting = TextField(verbose_name='Текст после регистрации в листе ожидания')
     entered = TextField(verbose_name='Текст после вступления в клуб')
     returned = TextField(verbose_name='Текст после возвращения в клуб')
     excluded = TextField(verbose_name='Текст после исключения из клуба')
-    privileged = CharField(verbose_name='Текст после получения привилегий')
+    privileged = TextField(verbose_name='Текст после получения привилегий')
 
     class Meta:
         db_table = "messages_new_status"
@@ -145,8 +240,8 @@ class MessageNewStatus(BaseModel):
 
 
 class GetcourseGroup(BaseModel):
-    waiting_group_id = CharField(default='', verbose_name='id группы лист ожидания')
-    club_group_id = CharField(default='', verbose_name='id группы члены клуба')
+    waiting_group_id = BigIntegerField(default=0, verbose_name='id группы лист ожидания')
+    club_group_id = BigIntegerField(default=0, verbose_name='id группы члены клуба')
 
     class Meta:
         db_table = "group_get_course"
@@ -175,21 +270,21 @@ class GetcourseGroup(BaseModel):
 
     @classmethod
     @logger.catch
-    def get_waiting_group(cls) -> str:
+    def get_waiting_group(cls) -> int:
         """Функция возвращает id канала """
         waiting_group: cls = cls.select().first()
-        return waiting_group.waiting_group_id if waiting_group else ''
+        return waiting_group.waiting_group_id if waiting_group else 0
 
     @classmethod
     @logger.catch
-    def get_club_group(cls) -> str:
+    def get_club_group(cls) -> int:
         """Функция возвращает id группы членов клуба """
         club_group: cls = cls.select().first()
-        return club_group.club_group_id if club_group else ''
+        return club_group.club_group_id if club_group else 0
 
 
 class Channel(BaseModel):
-    name = CharField(default='', verbose_name='id канала')
+    name = CharField(default='', verbose_name='Название канала')
     channel_id = BigIntegerField(unique=True, verbose_name='id канала')
 
     class Meta:
@@ -205,8 +300,8 @@ class Channel(BaseModel):
     @logger.catch
     def get_channels(cls) -> list:
         """Функция возвращает список каналов"""
-        channel = cls.select().execute()
-        return [chanel for chanel in channel] if channel else []
+        channels = cls.select().execute()
+        return list(channels) if channels else []
 
     @classmethod
     @logger.catch
@@ -217,8 +312,8 @@ class Channel(BaseModel):
 
 class Group(BaseModel):
     """Клас для хранения и работы с группами"""
-    id = IntegerField(primary_key=True, verbose_name='id группы')
-    name = IntegerField(verbose_name='id канала')
+    group_id = IntegerField(primary_key=True, verbose_name='id группы')
+    name = CharField(verbose_name='id канала')
 
     class Meta:
         db_table = "groups"
@@ -227,6 +322,8 @@ class Group(BaseModel):
     @logger.catch
     def edit_group(cls, groups: Tuple[dict, ...]) -> int:
         """Перезаписывает список групп"""
+        for group in groups:
+            group['group_id'] = group.pop('id')
         cls.delete().execute()
         return cls.insert_many(groups).execute()
 
@@ -235,13 +332,13 @@ class Group(BaseModel):
     def get_all_group_channel(cls) -> Tuple[tuple, ...]:
         """Возвращает список групп в виде пар кортежей """
         groups: List[cls] = list(cls.select().execute())
-        return tuple((group.id, group.name) for group in groups)
+        return tuple((group.group_id, group.name) for group in groups)
 
     @classmethod
     @logger.catch
-    def get_name_group_by_id(cls, group_id: str) -> str:
+    def get_name_group_by_id(cls, group_id: int) -> str:
         """Возвращает имя группы по id """
-        group: 'Group' = cls.get_or_none(cls.id == group_id)
+        group: 'Group' = cls.select().where(cls.group_id == group_id).first()
         return group.name if group else 'Нет группы'
 
 
@@ -461,7 +558,7 @@ class User(BaseModel):
 
     @classmethod
     @logger.catch
-    def get_users_not_admins(cls: 'User') -> list:
+    def get_users_which_can_be_chat(cls: 'User') -> list:
         """
         return list of telegram ids for active users without admins
         return: list
@@ -469,7 +566,6 @@ class User(BaseModel):
         return [
             user.telegram_id
             for user in cls.select(cls.telegram_id).
-            where(cls.admin == False).
             where(cls.status.in_([Statuses.entered, Statuses.returned, Statuses.privileged])).
             execute() if user.telegram_id
         ]
@@ -528,7 +624,7 @@ def recreate_db(_db_file_name: str) -> None:
 
 if __name__ == '__main__':
     # test()
-    recreate = 1
+    recreate = 0
     add_test_users = 1
     add_admins = 0
     import random
@@ -540,3 +636,5 @@ if __name__ == '__main__':
     if recreate:
         recreate_db(db_file_name)
 
+    print(GetcourseGroup.get_club_group())
+    print(Channel.get_channels())
