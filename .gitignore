@@ -3,6 +3,7 @@
 docker-compose.yml
 /db
 start.sh
+stop.sh
 
 
 ### Python template

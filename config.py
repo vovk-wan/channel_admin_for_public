@@ -38,6 +38,7 @@ admins: str = os.getenv("ADMINS")
 admins_list: list[str] = admins.split(',')
 DEBUG: bool = bool(int(os.getenv("DEBUG"), 0))
 admins_list: list[str] = [admins_list[0]] if DEBUG else admins_list
+GROUP_BOT_VERSION = os.getenv("GROUP_BOT_VERSION")
 
 
 class EMOJI:

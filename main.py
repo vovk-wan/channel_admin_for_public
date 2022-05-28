@@ -10,7 +10,7 @@ import datetime
 import asyncio
 from aiogram import executor
 
-from config import dp, logger, bot, db_file_name, admins_list
+from config import dp, logger, bot, db_file_name, admins_list, GROUP_BOT_VERSION
 from handlers.menu import menu_register_handlers
 from models import recreate_db
 from scheduler_funcs import check_base, edit_group_list
@@ -34,7 +34,7 @@ async def on_startup(_) -> None:
 
     try:
         # Отправляет сообщение админам при запуске бота
-        await send_report_to_admins(text="Бот запущен")
+        await send_report_to_admins(text=f"Бот запущен: ver. {GROUP_BOT_VERSION}")
     except Exception:
         pass
     if not os.path.exists('./db'):

@@ -1,0 +1,26 @@
+version: '3.9'
+
+services:
+  efclub_django:
+    container_name: efclub_django
+    image: deskent/deskent:efclub_django-1.0
+    command: >
+      sh -c "python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py shell < createadmin.py &&
+             gunicorn --env DJANGO_SETTINGS_MODULE=efclub_django.settings -b 0.0.0.0:8000 -w 3 efclub_django.wsgi"
+    env_file:
+      - ./.env
+    ports:
+      - '8000:8000'
+    volumes:
+      - ./efclub_django/logs:/app/logs
+  group_bot:
+    image: deskent/deskent:group_bot-1.0
+    env_file:
+      - ./.env
+    volumes:
+      - ./group_bot/logs:/app/logs
+      - ./db:/app/db
+    depends_on:
+      - efclub_django
