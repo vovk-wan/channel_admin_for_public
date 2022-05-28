@@ -127,8 +127,10 @@ async def user_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(MenuState.get_state_by_name(callback.data))
     start_message = data.get('start_message')
     if not start_message:
+        menu = await bot.send_message(chat_id=callback.message.chat.id,text='menu')
+        start_message = menu.message_id
         logger.debug('deleted start menu')
-        return
+        # return
 
     if name_state == 'not_in_base':
         try:
