@@ -38,11 +38,10 @@ class DefaultTexts:
     for_waiting_list: str = '"Хочу в клуб" для листа ожидания'
     for_excluded: str = '"Хочу в клуб" исключенных'
     for_entered: str = '"Хочу в клуб" для тех кто может получить ссылку'
-    for_entered: str = '"Хочу в клуб" для тех кто получал ссылку'
+    for_entered_got_link: str = '"Хочу в клуб" для тех кто получал ссылку'
 
     link_waiting_list: str = 'https://getcourse.io/'
-    link_paid_excluded: str = 'https://getcourse.io/'
-    link_paid_waiting_list: str = 'https://getcourse.io/'
+    link_to_pay: str = 'https://getcourse.io/'
 
 
 class BaseModel(Model):
@@ -68,7 +67,7 @@ class Text(BaseModel):
     for_entered = TextField(verbose_name='"Хочу в клуб" для тех кто может получить ссылку')
     for_entered_got_link = TextField(verbose_name='"Хочу в клуб" для тех кто уже получал ссылку')
 
-    link_waiting_list = CharField(verbose_name='Ссылка на лист ожидания')
+    link_to_pay = CharField(verbose_name='Ссылка на лист ожидания')
     # link_to_pay_excluded = CharField(verbose_name='Ссылка на оплату для исключенных')
     # link_to_pay_waiting_list = CharField(
     #     verbose_name='Ссылка на оплату пользователям в листе ожидания')
@@ -200,7 +199,7 @@ class Text(BaseModel):
         data = cls.select().first()
         if not data:
             data = DefaultTexts
-        return data.link_paid_excluded
+        return data.link_to_pay
 
     # @classmethod
     # @logger.catch
@@ -439,7 +438,6 @@ class User(BaseModel):
             if not user.status in [Statuses.entered, Statuses.returned]:
                 new_status = Statuses.returned if user.status == Statuses.excluded else Statuses.entered
                 user.getcourse_id = getcourse_id
-                user.member = True
                 user.status = new_status
                 user.status_updated = True
                 user.save()
@@ -467,14 +465,12 @@ class User(BaseModel):
         if user:
             if not user.status in [Statuses.entered, Statuses.returned] and user.status != Statuses.waiting:
                 user.getcourse_id = getcourse_id
-                user.member = False
                 user.status = Statuses.waiting
                 user.status_updated = True
                 return user.save()
         elif user_by_id:
             if not user.status in [Statuses.entered, Statuses.returned] and user.status != Statuses.waiting:
                 user.getcourse_id = getcourse_id
-                user.member = False
                 user.status = Statuses.waiting
                 user.status_updated = True
                 return user.save()
@@ -510,7 +506,7 @@ class User(BaseModel):
         exclude user by getcourse id
         """
         return (
-          cls.update({cls.member: False, cls.status: Statuses.excluded, cls.status_updated: True}).
+          cls.update({cls.status: Statuses.excluded, cls.status_updated: True}).
           where(cls.getcourse_id.not_in(getcourse_id)).
           where(cls.status.in_([Statuses.entered, Statuses.returned])).execute()
         )

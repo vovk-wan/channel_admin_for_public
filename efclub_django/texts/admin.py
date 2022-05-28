@@ -10,7 +10,7 @@ from texts.models import Channel, User, UserStatus, Text, Group, GetcourseGroup,
 
 class UserAdmin(admin.ModelAdmin):
     list_display = ['phone', 'telegram_id', 'status', 'expiration_date', ]
-    list_filter = ['got_invite']
+    list_filter = ['got_invite', 'status']
     search_fields = ['phone']
 
 

@@ -19,7 +19,7 @@ class Text(models.Model):
     for_entered_got_link = models.TextField(verbose_name='"Хочу в клуб" для тех кто уже получал ссылку')
 
     link_waiting_list = models.CharField(max_length=255, verbose_name='Ссылка на лист ожидания')
-    link_to_pay_excluded = models.CharField(
+    link_to_pay = models.CharField(
         max_length=255, verbose_name='Ссылка на оплату')
 
     class Meta:
@@ -109,12 +109,11 @@ class User(models.Model):
 
 class MessageNewStatus(models.Model):
     """Class for text message  table"""
-    challenger = models.TextField(max_length=255, blank=True, verbose_name='Тест после отправки номера телефона')
-    waiting = models.TextField(max_length=255, blank=True, verbose_name='Текст после регистрации в листе ожидания')
-    entered = models.TextField(max_length=255, blank=True, verbose_name='Текст после вступления в клуб')
-    returned = models.TextField(max_length=255, blank=True, verbose_name='Текст после возвращения в клуб')
-    excluded = models.TextField(max_length=255, blank=True, verbose_name='Текст после исключения из клуба')
-    privileged = models.CharField(max_length=255, blank=True, verbose_name='Текст после получения привилегий')
+    waiting = models.TextField(blank=True, verbose_name='Текст после регистрации в листе ожидания')
+    entered = models.TextField(blank=True, verbose_name='Текст после вступления в клуб')
+    returned = models.TextField(blank=True, verbose_name='Текст после возвращения в клуб')
+    excluded = models.TextField(blank=True, verbose_name='Текст после исключения из клуба')
+    privileged = models.TextField(blank=True, verbose_name='Текст после получения привилегий')
 
     class Meta:
         db_table = "messages_new_status"
