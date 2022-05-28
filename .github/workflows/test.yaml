@@ -22,7 +22,7 @@ jobs:
           echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u $DOCKER_USER --password-stdin
       - name: Docker build
         run: |
-          docker build . -t ${{ env.GROUP_BOT_NAME }}:${{ env.VERSION }}
+          docker build ./efclub_django -t ${{ env.GROUP_BOT_NAME }}:${{ env.VERSION }}
       - name: Docker tagging
         run: |
           docker tag ${{ env.GROUP_BOT_NAME }}:${{ env.VERSION}} ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.GROUP_BOT_NAME}}-${{ env.GROUP_BOT_VERSION }}
@@ -61,7 +61,6 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             cd /home/${{ secrets.USERNAME }}/deploy/group_bot/dev
-            echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u $DOCKER_USER --password-stdin
             docker-compose -f docker-compose-${{ env.PROJECT_NAME }}-${{ env.STAGE }}.yml down
             docker container rm ${{ env.GROUP_BOT_NAME }}
             docker container rm ${{ env.EFCLUB_DJANGO }}
