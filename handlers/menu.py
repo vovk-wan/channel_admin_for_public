@@ -20,7 +20,12 @@ from states import MenuState, AdminState, get_state_name
 async def get_user_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
     await state.finish()
     callback.message.from_user.id = callback.from_user.id
-    await start_menu_handler(callback.message, state=state)
+    if callback.data == 'get_user_menu':
+        await start_menu_handler(callback.message, state=state)
+    else:
+        callback.data = 'want'
+        await state.set_state(MenuState.start)
+        await user_menu_handler(callback, state)
     await callback.answer()
 
 
@@ -125,7 +130,10 @@ def menu_register_handlers(dp: Dispatcher) -> None:
     """
     #  ********* функции user_menu
     dp.register_callback_query_handler(
-        get_user_menu_handler, lambda callback: callback.data == 'get_user_menu', state='*')
+        get_user_menu_handler,
+        lambda callback: callback.data in ('get_user_menu', 'get_user_menu_want'),
+        state='*'
+    )
 
     dp.register_callback_query_handler(
         get_invite_link_from_mailing, lambda callback: callback.data == 'get_invite_link_from_mailing', state='*' )
