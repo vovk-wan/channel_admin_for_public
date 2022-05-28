@@ -61,6 +61,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             cd /home/${{ secrets.USERNAME }}/deploy/group_bot/dev
+            echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u $DOCKER_USER --password-stdin
             docker-compose -f docker-compose-${{ env.PROJECT_NAME }}-${{ env.STAGE }}.yml down
             docker container rm ${{ env.GROUP_BOT_NAME }}
             docker container rm ${{ env.EFCLUB_DJANGO }}
