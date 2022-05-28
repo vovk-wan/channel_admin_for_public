@@ -50,6 +50,7 @@ class EMOJI:
 #  ********** LOGGER CONFIG ********************************
 LOGGING_DIRECTORY = 'logs'
 LOGGING_FILENAME = 'efcliub.log'
+# TODO ??????????? BASE_DIR ????
 PATH = os.getcwd()
 if not os.path.exists('./logs'):
     os.mkdir("./logs")
@@ -70,12 +71,12 @@ logger.configure(
         dict(name="ERROR", color="<red>"),
     ]
 )
-logger.info('Start logging to:', file_path)
+logger.info('Start logging to: {file_path}')
 #  ********** END OF LOGGER CONFIG *************************
 
 
 #  ********** DATABASE CONFIG *************************
-
+# TODO удалить??????????????
 db_file_name = f'{BASE_DIR}/db/users.db'
 def sqlite():
     full_path = os.path.join(PATH, db_file_name)
