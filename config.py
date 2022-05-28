@@ -37,9 +37,10 @@ with open(f"{BASE_DIR}/db/session.txt", 'r', encoding='utf-8') as f:
 
 # set admins list
 me = os.getenv("ME_TELEGRAM_ID")
-admins_list = [me, '259984017', '455814456']#, '305353027']
+admins_list = [me, '259984017', '455814456']
 DEBUG = int(os.getenv("DEBUG"))
 if not DEBUG:
+    # todo  что тут было?
     admins_list.extend({})
 
 
@@ -51,7 +52,7 @@ class EMOJI:
 
 #  ********** LOGGER CONFIG ********************************
 LOGGING_DIRECTORY = 'logs'
-LOGGING_FILENAME = 'discord_mailer.log'
+LOGGING_FILENAME = 'efcliub.log'
 PATH = os.getcwd()
 if not os.path.exists('./logs'):
     os.mkdir("./logs")

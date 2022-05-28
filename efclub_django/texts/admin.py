@@ -1,11 +1,5 @@
 from django.contrib import admin
 from texts.models import Channel, User, UserStatus, Text, Group, GetcourseGroup, MessageNewStatus
-# Register your models here.
-# from models import UserStatus
-
-# TODO проверить все имена
-# class UserStatusAdmin(admin.ModelAdmin):
-#     pass
 
 
 class UserAdmin(admin.ModelAdmin):

@@ -110,7 +110,7 @@ def about_(*args, **kwargs) -> InlineKeyboardMarkup:
 
 
 @logger.catch
-def link_pay_waiting_list_menu(*args, **kwargs) -> InlineKeyboardMarkup:
+def link_pay_waiting_list_menu() -> InlineKeyboardMarkup:
     url: str = Text.get_link_to_pay()
     try:
         keyboard = InlineKeyboardMarkup().add(
@@ -137,7 +137,7 @@ def want_(*args, **kwargs) -> InlineKeyboardMarkup:
 
 @logger.catch
 def excluded_(*args, **kwargs) -> InlineKeyboardMarkup:
-    """TODO добавить ссылку на оплату """
+    """keyboard for excluded users """
     url: str = Text.get_link_to_pay()
 
     return InlineKeyboardMarkup(row_width=2).add(
@@ -179,15 +179,15 @@ def club_got_link_(*args, **kwargs) -> InlineKeyboardMarkup:
 
 
 @logger.catch
-def wait_list_(*args, **kwargs) -> InlineKeyboardMarkup:
+def wait_list_() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(row_width=1).add(inline_button_start())
 
 
 @logger.catch
-def make_keyboard_for_mailing(status: str, got_invite: bool) -> InlineKeyboardMarkup:
+def make_keyboard_for_mailing(status: str) -> InlineKeyboardMarkup:
     keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(row_width=2)
     keyboard.add(inline_button_link_user_menu())
-    if (status in [Statuses.entered, Statuses.returned, Statuses.privileged]):
+    if status in [Statuses.entered, Statuses.returned, Statuses.privileged]:
         button = inline_button_invite_link()
         button.callback_data = 'get_invite_link_from_mailing'
         keyboard.add(button)

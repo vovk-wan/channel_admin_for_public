@@ -2,23 +2,21 @@
 
 import datetime
 from dataclasses import dataclass
-from typing import Union, List
 
 import aiogram
-from aiogram.dispatcher.filters import Text
-from aiogram.types import (Message, CallbackQuery, InlineKeyboardMarkup, ReplyKeyboardMarkup,
-                           InlineKeyboardButton)
+import aiogram.utils.exceptions
+from aiogram.dispatcher import FSMContext
+from aiogram.types import (Message, CallbackQuery, InlineKeyboardMarkup,
+                           ReplyKeyboardMarkup)
 from aiogram.types.chat import ChatInviteLink
 
-from aiogram.dispatcher import FSMContext
-import aiogram.utils.exceptions
-from config import logger, Dispatcher, bot, EMOJI, LINK_EXPIRATION_TIME, admins_list
-from handlers.utils import get_user_position, get_all_admins
+from config import logger, bot, EMOJI, LINK_EXPIRATION_TIME
+from handlers import utils
+from handlers.utils import get_all_admins
+from keyboards import user
 from models import User, Channel, Statuses
 from scheduler_funcs import send_message_to_admin
-from states import MenuState, AdminState, get_state_name
-from keyboards import user
-from handlers import utils
+from states import MenuState
 # from handlers.admin_menu import admin_menu_handler
 from texts.menu import TextsUser
 
@@ -127,7 +125,7 @@ async def user_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(MenuState.get_state_by_name(callback.data))
     start_message = data.get('start_message')
     if not start_message:
-        menu = await bot.send_message(chat_id=callback.message.chat.id,text='menu')
+        menu = await bot.send_message(chat_id=callback.message.chat.id, text='menu')
         start_message = menu.message_id
         logger.debug('deleted start menu')
         # return
@@ -164,7 +162,9 @@ async def user_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
             logger.error(err)
 
         text = TextsUser.get_menu_text('start')()
-        keyboard: InlineKeyboardMarkup = Keyboard.get_menu_keyboard('start')(telegram_id=telegram_id)
+        keyboard: InlineKeyboardMarkup = (
+            Keyboard.get_menu_keyboard('start')(telegram_id=telegram_id)
+        )
         start_message = await bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
         await state.update_data({'start_message': start_message.message_id})
         return
@@ -192,10 +192,7 @@ async def user_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
 @logger.catch
 async def add_phone_number(message: Message, state: FSMContext):
     """Обработка запроса на получение ссылки и запись в базу"""
-    # TODO декоратор на наличие канала
-    # channel_id = Channel.get_channel()
-    # if not channel_id:
-    #     return
+
     telegram_id = message.from_user.id
     phone = message.contact.phone_number
     contact_id = message.contact.user_id
@@ -206,10 +203,10 @@ async def add_phone_number(message: Message, state: FSMContext):
         return
     logger.info('Processing of invitation link requests begins :')
 
-    user = User.add_challenger(telegram_id=telegram_id, phone=phone)
+    user_data = User.add_challenger(telegram_id=telegram_id, phone=phone)
     new_state = 'start'
-    if user:
-        new_state = utils.get_position(user)
+    if user_data:
+        new_state = utils.get_position(user_data)
     await state.set_state(MenuState.get_state_by_name(new_state))
     callback = CallbackQuery()
     callback.data = new_state
@@ -223,17 +220,18 @@ async def get_link(telegram_id: int) -> str:
     # channel_id = Channel.get_channel()
     # if not channel_id:
     #     return
-    user: User = User.get_users_by_telegram_id(telegram_id=telegram_id)
-    if user.status not in [Statuses.entered, Statuses.returned, Statuses.privileged]:
+    user_data: User = User.get_users_by_telegram_id(telegram_id=telegram_id)
+    if user_data.status not in [Statuses.entered, Statuses.returned, Statuses.privileged]:
         return 'Вас нет в списках членов клуба, ссылка выслана не будет.'
 
-    access = not user.got_invite
+    access = not user_data.got_invite
     answer = ''
     if not access:
         admins_name: tuple = await get_all_admins()
         answer = (f'Вы уже есть в базе данных обратитесь к администратору\n'
-                 f'{EMOJI.hello}\n'
-                 f'Администраторы:')
+                  f'{EMOJI.hello}\n'
+                  f'Администраторы:'
+                  )
         answer += '\n' + '\n'.join(admins_name)
         return answer
     expire_date = datetime.datetime.now() + datetime.timedelta(hours=LINK_EXPIRATION_TIME)
@@ -269,4 +267,3 @@ async def get_link(telegram_id: int) -> str:
             logger.error(err)
 
     return answer
-

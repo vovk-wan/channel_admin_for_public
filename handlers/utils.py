@@ -11,9 +11,11 @@ def get_position(user: User) -> str:
 
     if user.status == Statuses.challenger:
         result = 'challenger'
-    elif user.status in (Statuses.entered, Statuses.returned, Statuses.privileged) and user.got_invite:
+    elif user.status in (
+            Statuses.entered, Statuses.returned, Statuses.privileged) and user.got_invite:
         result = 'club_got_link'
-    elif user.status in (Statuses.entered, Statuses.returned, Statuses.privileged) and not user.got_invite:
+    elif user.status in (
+            Statuses.entered, Statuses.returned, Statuses.privileged) and not user.got_invite:
         result = 'club_not_got_link'
     elif user.status == Statuses.excluded:
         result = 'excluded'
@@ -72,4 +74,3 @@ async def get_all_admins() -> tuple:
             logger.error(err)
     admins_name: tuple = await get_channel_admin(channels=channels)
     return admins_name
-

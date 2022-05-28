@@ -147,7 +147,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #  ********** LOGGER CONFIG ********************************
 LOGGING_DIRECTORY = 'logs'
-LOGGING_FILENAME = 'discord_mailer.log'
+LOGGING_FILENAME = 'efclub.log'
 PATH = os.getcwd()
 if not os.path.exists('./logs'):
     os.mkdir("./logs")

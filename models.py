@@ -3,7 +3,8 @@ from dataclasses import dataclass
 import os
 from typing import Any, List, Tuple
 
-from peewee import (CharField, BooleanField, IntegerField, TextField, DateTimeField, BigIntegerField)
+from peewee import (
+    CharField, BooleanField, IntegerField, TextField, DateTimeField, BigIntegerField)
 from peewee import Model
 
 from config import logger, db, db_file_name
@@ -437,7 +438,7 @@ class User(BaseModel):
         """
         user = cls.get_user_by_phone(phone=phone[-10:])
         if user:
-            if not user.status in [Statuses.entered, Statuses.returned]:
+            if user.status not in [Statuses.entered, Statuses.returned]:
                 new_status = Statuses.returned if user.status == Statuses.excluded else Statuses.entered
                 user.getcourse_id = getcourse_id
                 user.status = new_status

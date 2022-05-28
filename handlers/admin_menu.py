@@ -11,7 +11,7 @@ from config import logger, bot, admins_list
 from keyboards import admin
 from models import GetcourseGroup, Channel, User, Text
 from models import Group
-from scheduler_funcs import mailing_new_status, send_message_to_admin
+from scheduler_funcs import send_message_to_admin
 from states import AdminState, get_state_name
 from texts.menu import AdminTexts
 from keyboards.user import link_pay_waiting_list_menu
@@ -35,6 +35,7 @@ class AdminKeyboard:
         except AttributeError as err:
             logger.info(err)
             return cls.user_menu
+
 
 @logger.catch
 async def start_menu_admin(callback: CallbackQuery, state: FSMContext) -> None:

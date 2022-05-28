@@ -4,9 +4,9 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.types import (Message, CallbackQuery)
 
-from config import logger, Dispatcher, admins_list, bot, dp
+from config import logger, Dispatcher, admins_list, bot
 from handlers.admin_menu import (
-    start_menu_admin, channel_registration, wait_text, edit_channel,
+    start_menu_admin, channel_registration, edit_channel,
     group_registration,
     return_telegram_id_handler, edit_group, mailing_list
 )
@@ -136,7 +136,9 @@ def menu_register_handlers(dp: Dispatcher) -> None:
     )
 
     dp.register_callback_query_handler(
-        get_invite_link_from_mailing, lambda callback: callback.data == 'get_invite_link_from_mailing', state='*' )
+        get_invite_link_from_mailing,
+        lambda callback: callback.data == 'get_invite_link_from_mailing', state='*'
+    )
 
     dp.register_message_handler(start_menu_handler, commands=["start"], state="*")
     dp.register_message_handler(
