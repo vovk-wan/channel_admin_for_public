@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [group_bot, efclub_django]
     env:
-      WORK_DIR: "/home/${{ secrets.USERNAME }}/deploy/$PROJECT_NAME/$STAGE"
+      WORK_DIR: "/home/${{ secrets.USERNAME }}/deploy/group_bot/dev"
     steps:
       - name: Git clone
         uses: actions/checkout@v2
