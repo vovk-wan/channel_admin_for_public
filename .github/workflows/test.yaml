@@ -22,7 +22,7 @@ jobs:
           echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u $DOCKER_USER --password-stdin
       - name: Docker build
         run: |
-          docker build ./efclub_django -t ${{ env.GROUP_BOT_NAME }}:${{ env.VERSION }}
+          docker build . -t ${{ env.GROUP_BOT_NAME }}:${{ env.VERSION }}
       - name: Docker tagging
         run: |
           docker tag ${{ env.GROUP_BOT_NAME }}:${{ env.VERSION}} ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.GROUP_BOT_NAME}}-${{ env.GROUP_BOT_VERSION }}
@@ -38,7 +38,7 @@ jobs:
           echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u $DOCKER_USER --password-stdin
       - name: Docker build
         run: |
-          docker build . -t ${{ env.EFCLUB_DJANGO }}:${{ env.VERSION }}
+          docker build ./efclub_django -t ${{ env.EFCLUB_DJANGO }}:${{ env.VERSION }}
       - name: Docker tagging
         run: |
           docker tag ${{ env.EFCLUB_DJANGO }}:${{ env.VERSION}} ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.EFCLUB_DJANGO}}-${{ env.EFCLUB_DJANGO_VERSION }}
