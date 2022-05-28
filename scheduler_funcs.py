@@ -36,6 +36,7 @@ async def send_message_to_admin(text: str, keyboard: InlineKeyboardMarkup = None
 async def mailing_new_status(users: list):
     """Отправляет сообщение пользователям о смене статуса"""
     messages: dict = MessageNewStatus.get_messages()
+    count = 0
     for user in users:
         telegram_id = user.telegram_id
         text = messages.get(user.status, '').strip()
@@ -43,8 +44,10 @@ async def mailing_new_status(users: list):
             try:
                 keyboard = make_keyboard_for_mailing(user.status, user.got_invite)
                 await bot.send_message(chat_id=telegram_id, text=text, reply_markup=keyboard)
+                count +=1
             except Exception as err:
-                logger.error(f'{err.__traceback__.tb_frame}\n{err}')
+                logger.error(f'{err} ')
+    return count
 
 
 @ logger.catch
@@ -61,7 +64,7 @@ def edit_group_list() -> int:
 
 
 @logger.catch
-def get_data_id_from_api(group_id: str) -> int:
+def get_data_id_from_api(group_id: int) -> int:
     """
     Запрашивает создание списка пользователей в группе от API
     :param group_id: id группы
@@ -238,8 +241,10 @@ async def channel_maintenance() -> None:
     count = add_new_users(data, SourceData.club)
     logger.info(f'{count} users updated to BD club group')
     users_with_updated_status = User.get_users_for_mailing_new_status()
-    await mailing_new_status(users_with_updated_status)
-    count = User.un_set_status_updated_for_all()
+
+    count = await mailing_new_status(users_with_updated_status)
+
+    User.un_set_status_updated_for_all()
     logger.info(f'{count} mail sends')
 
     waiting_group_id = GetcourseGroup.get_waiting_group()
@@ -266,8 +271,11 @@ async def channel_maintenance() -> None:
     getcourse_id = tuple(user.get('getcourse_id', None) for user in data)
     count = User.delete_user_from_waiting_list_by_getcourse_id(list(getcourse_id))
     logger.info(f'{count}  users delete from DB')
-    await mailing_new_status(users_with_updated_status)
-    count = User.un_set_status_updated_for_all()
+
+    users_with_updated_status = User.get_users_for_mailing_new_status()
+
+    count = await mailing_new_status(users_with_updated_status)
+    User.un_set_status_updated_for_all()
     logger.info(f'{count} mail sends')
 
 

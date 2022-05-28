@@ -2,6 +2,7 @@
 
 import datetime
 from dataclasses import dataclass
+from typing import Union, List
 
 import aiogram
 from aiogram.dispatcher.filters import Text
@@ -12,7 +13,7 @@ from aiogram.types.chat import ChatInviteLink
 from aiogram.dispatcher import FSMContext
 import aiogram.utils.exceptions
 from config import logger, Dispatcher, bot, EMOJI, LINK_EXPIRATION_TIME, admins_list
-from handlers.utils import get_user_position
+from handlers.utils import get_user_position, get_all_admins
 from models import User, Channel, Statuses
 from scheduler_funcs import send_message_to_admin
 from states import MenuState, AdminState, get_state_name
@@ -132,7 +133,7 @@ async def user_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
     if name_state == 'not_in_base':
         try:
             await bot.edit_message_text(
-                text='контакт', chat_id=chat_id, message_id=start_message)
+                text=' ☎️ ', chat_id=chat_id, message_id=start_message)
             contact_message = await bot.send_message(
                 text=TextsUser.not_in_base(),
                 chat_id=chat_id,
@@ -221,16 +222,18 @@ async def get_link(telegram_id: int) -> str:
     # if not channel_id:
     #     return
     user: User = User.get_users_by_telegram_id(telegram_id=telegram_id)
-    if user.status not in [Statuses.entered, Statuses.returned]:
+    if user.status not in [Statuses.entered, Statuses.returned, Statuses.privileged]:
         return 'Вас нет в списках членов клуба, ссылка выслана не будет.'
 
     access = not user.got_invite
     answer = ''
     if not access:
+        admins_name: tuple = await get_all_admins()
         answer = (f'Вы уже есть в базе данных обратитесь к администратору\n'
                  f'{EMOJI.hello}\n'
                  f'Администраторы:')
-
+        answer += '\n' + '\n'.join(admins_name)
+        return answer
     expire_date = datetime.datetime.now() + datetime.timedelta(hours=LINK_EXPIRATION_TIME)
     data = Channel.get_channels()
     if not data:
@@ -245,32 +248,23 @@ async def get_link(telegram_id: int) -> str:
                 channels.append(result)
         except Exception as err:
             logger.error(err)
-    admins_name: set = set()
+
     for channel in channels:
-        if access:
-            try:
-                await channel.unban(telegram_id)
-                await channel.unban_sender_chat(telegram_id)
-            except Exception as exc:
-                logger.error(f'{exc.__traceback__.tb_frame}\n{exc}')
+        try:
+            await channel.unban(telegram_id)
+            await channel.unban_sender_chat(telegram_id)
+        except Exception as exc:
+            logger.error(f'{exc.__traceback__.tb_frame}\n{exc}')
 
         try:
-            if access:
-                link: ChatInviteLink = await channel.create_invite_link(
-                    expire_date=expire_date,
-                    member_limit=1
-                )
-                answer += f'\n{channel.full_name}\n{link.invite_link}'
-                User.got_invited(telegram_id=telegram_id)
-            else:
-                admins = await channel.get_administrators()
-                for admin in admins:
-                    if not admin.user.is_bot:
-
-                        admins_name.add(admin.user.mention)
-
+            link: ChatInviteLink = await channel.create_invite_link(
+                expire_date=expire_date,
+                member_limit=1
+            )
+            answer += f'\n{channel.full_name}\n{link.invite_link}'
+            User.got_invited(telegram_id=telegram_id)
         except Exception as err:
             logger.error(err)
 
-    answer += '\n' + '\n'.join(admins_name)
     return answer
+

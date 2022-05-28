@@ -239,6 +239,7 @@ class MessageNewStatus(BaseModel):
 
 
 class GetcourseGroup(BaseModel):
+    """Класс для хранения и работы с группами геткурса для бота"""
     waiting_group_id = BigIntegerField(default=0, verbose_name='id группы лист ожидания')
     club_group_id = BigIntegerField(default=0, verbose_name='id группы члены клуба')
 
@@ -283,6 +284,7 @@ class GetcourseGroup(BaseModel):
 
 
 class Channel(BaseModel):
+    """Класс для хранения и изменения каналов и групп телеграм"""
     name = CharField(default='', verbose_name='Название канала')
     channel_id = BigIntegerField(unique=True, verbose_name='id канала')
 
@@ -541,8 +543,10 @@ class User(BaseModel):
     @classmethod
     @logger.catch
     def get_users_for_mailing_new_status(cls: 'User') -> list:
+        """Получить список пользователей для рассылки"""
         users = (
             cls.select().where(cls.status_updated == True).
+            where(cls.status.not_in([Statuses.challenger])).
             where(cls.telegram_id.is_null(False)).execute()
         )
         return [user for user in users if user.telegram_id]
