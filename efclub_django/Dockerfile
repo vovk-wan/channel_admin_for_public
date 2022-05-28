@@ -10,4 +10,4 @@ RUN apt-get update && \
     pip install psycopg2 && \
     python3 -m pip install --no-cache-dir -r requirements.txt
 
-ADD ./efclub_django .
+ADD . .

@@ -1,0 +1,69 @@
+name: channel_admin
+env:
+  DOCKER_USER: "deskent"
+  DOCKER_REPOSITORY_NAME: "deskent"
+  PROJECT_NAME: "group_bot"
+  GROUP_BOT_NAME: "group_bot"
+  GROUP_BOT_VERSION: "1.0"
+  EFCLUB_DJANGO: "efclub_django"
+  EFCLUB_DJANGO_VERSION: "1.0"
+  STAGE: "dev"
+  VERSION: "ver-${{ github.sha }}"
+on:
+  push:
+    branches: [ test ]
+jobs:
+  group_bot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Docker login
+        run: |
+          echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u $DOCKER_USER --password-stdin
+      - name: Docker build
+        run: |
+          docker build . -t ${{ env.GROUP_BOT_NAME }}:${{ env.VERSION }}
+      - name: Docker tagging
+        run: |
+          docker tag ${{ env.GROUP_BOT_NAME }}:${{ env.VERSION}} ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.GROUP_BOT_NAME}}-${{ env.GROUP_BOT_VERSION }}
+      - name: Docker push
+        run: |
+          docker push ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.GROUP_BOT_NAME}}-${{ env.GROUP_BOT_VERSION }}
+  efclub_django:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Docker login
+        run: |
+          echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u $DOCKER_USER --password-stdin
+      - name: Docker build
+        run: |
+          docker build . -t ${{ env.EFCLUB_DJANGO }}:${{ env.VERSION }}
+      - name: Docker tagging
+        run: |
+          docker tag ${{ env.EFCLUB_DJANGO }}:${{ env.VERSION}} ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.EFCLUB_DJANGO}}-${{ env.EFCLUB_DJANGO_VERSION }}
+      - name: Docker push
+        run: |
+          docker push ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.EFCLUB_DJANGO}}-${{ env.EFCLUB_DJANGO_VERSION }}
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [create_docker_build]
+    env:
+      WORK_DIR: "/home/${{ secrets.USERNAME }}/deploy/${{ env.PROJECT_NAME }}/${{ env.STAGE }}"
+    steps:
+      - name: Git clone
+        uses: actions/checkout@v2
+      - name: Executing remote ssh commands using ssh key
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd ${{ env.WORK_DIR }}
+            docker-compose -f docker-compose-${{ env.PROJECT_NAME }}-${{ env.STAGE }}.yaml down
+            docker container rm ${{ env.GROUP_BOT_NAME }}
+            docker container rm ${{ env.EFCLUB_DJANGO }}
+            docker rmi ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.GROUP_BOT_NAME}}-${{ env.GROUP_BOT_VERSION }} -f
+            docker rmi ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.EFCLUB_DJANGO}}-${{ env.EFCLUB_DJANGO_VERSION }} -f
+            docker-compose -f docker-compose-${{ env.PROJECT_NAME }}-${{ env.STAGE }}.yaml up --force-recreate -d

@@ -39,9 +39,6 @@ async def on_startup(_) -> None:
         pass
     if not os.path.exists('./db'):
         os.mkdir("./db")
-    if not os.path.exists(db_file_name):
-        logger.warning(f"Database not found with file name: {db_file_name}")
-        recreate_db(db_file_name)
 
     logger.info('Bot started at:', datetime.datetime.now())
     logger.info("BOT POLLING ONLINE")

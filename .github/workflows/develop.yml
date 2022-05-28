@@ -10,7 +10,23 @@ on:
   push:
     branches: [ main ]
 jobs:
-  create_docker_build:
+  group_bot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Docker login
+        run: |
+          echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u $DOCKER_USER --password-stdin
+      - name: Docker build
+        run: |
+          docker build . -t ${{ env.PROJECT_NAME }}:${{ env.VERSION }}
+      - name: Docker tagging
+        run: |
+          docker tag ${{ env.PROJECT_NAME }}:${{ env.VERSION}} ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.PROJECT_NAME}}-${{ env.COUNT }}
+      - name: Docker push
+        run: |
+          docker push ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.PROJECT_NAME}}-${{ env.COUNT }}
+  efclub_django:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -30,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [create_docker_build]
     env:
-      WORK_DIR: "/home/${{ secrets.USERNAME }}/deploy"
+      WORK_DIR: "/home/${{ secrets.USERNAME }}/deploy/"
     steps:
       - name: Git clone
         uses: actions/checkout@v2
