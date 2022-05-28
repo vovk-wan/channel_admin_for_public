@@ -187,12 +187,13 @@ def wait_list_(*args, **kwargs) -> InlineKeyboardMarkup:
 def make_keyboard_for_mailing(status: str, got_invite: bool) -> InlineKeyboardMarkup:
     keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(row_width=2)
     keyboard.add(inline_button_link_user_menu())
-    if (status in [Statuses.entered, Statuses.returned, Statuses.privileged]
-        and not got_invite):
+    if (status in [Statuses.entered, Statuses.returned, Statuses.privileged]):
         button = inline_button_invite_link()
         button.callback_data = 'get_invite_link_from_mailing'
         keyboard.add(button)
     elif status in [Statuses.excluded]:
-        keyboard.add(inline_button_want())
+        button = inline_button_want()
+        button.callback_data = 'get_user_menu_want'
+        keyboard.add(button)
 
     return keyboard
