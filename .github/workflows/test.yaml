@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [create_docker_build]
     env:
-      WORK_DIR: "/home/${{ secrets.USERNAME }}/deploy/${{ env.PROJECT_NAME }}/${{ env.STAGE }}"
+      WORK_DIR: "/home/${{ secrets.USERNAME }}/deploy/${{ PROJECT_NAME }}/${{ STAGE }}"
     steps:
       - name: Git clone
         uses: actions/checkout@v2
