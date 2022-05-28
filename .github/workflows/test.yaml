@@ -7,11 +7,11 @@ env:
   GROUP_BOT_VERSION: "1.0"
   EFCLUB_DJANGO: "efclub_django"
   EFCLUB_DJANGO_VERSION: "1.0"
-  STAGE: "prod"
+  STAGE: "dev"
   VERSION: "ver-${{ github.sha }}"
 on:
   push:
-    branches: [ main ]
+    branches: [ test ]
 jobs:
   group_bot:
     runs-on: ubuntu-latest

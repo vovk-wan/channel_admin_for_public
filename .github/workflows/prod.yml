@@ -1,11 +1,14 @@
-name: channel_admin
+name: group_bot
 env:
   DOCKER_USER: "bibared"
   DOCKER_REPOSITORY_NAME: "efclub"
-  PROJECT_NAME: "channel_admin"
-  STAGE: "dev"
+  PROJECT_NAME: "group_bot"
+  GROUP_BOT_NAME: "group_bot"
+  GROUP_BOT_VERSION: "1.0"
+  EFCLUB_DJANGO: "efclub_django"
+  EFCLUB_DJANGO_VERSION: "1.0"
+  STAGE: "prod"
   VERSION: "ver-${{ github.sha }}"
-  COUNT: "1.0"
 on:
   push:
     branches: [ main ]
@@ -19,13 +22,13 @@ jobs:
           echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u $DOCKER_USER --password-stdin
       - name: Docker build
         run: |
-          docker build . -t ${{ env.PROJECT_NAME }}:${{ env.VERSION }}
+          docker build . -t ${{ env.GROUP_BOT_NAME }}:${{ env.VERSION }}
       - name: Docker tagging
         run: |
-          docker tag ${{ env.PROJECT_NAME }}:${{ env.VERSION}} ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.PROJECT_NAME}}-${{ env.COUNT }}
+          docker tag ${{ env.GROUP_BOT_NAME }}:${{ env.VERSION}} ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.GROUP_BOT_NAME}}-${{ env.GROUP_BOT_VERSION }}
       - name: Docker push
         run: |
-          docker push ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.PROJECT_NAME}}-${{ env.COUNT }}
+          docker push ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.GROUP_BOT_NAME}}-${{ env.GROUP_BOT_VERSION }}
   efclub_django:
     runs-on: ubuntu-latest
     steps:
@@ -35,18 +38,16 @@ jobs:
           echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u $DOCKER_USER --password-stdin
       - name: Docker build
         run: |
-          docker build . -t ${{ env.PROJECT_NAME }}:${{ env.VERSION }}
+          docker build ./efclub_django -t ${{ env.EFCLUB_DJANGO }}:${{ env.VERSION }}
       - name: Docker tagging
         run: |
-          docker tag ${{ env.PROJECT_NAME }}:${{ env.VERSION}} ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.PROJECT_NAME}}-${{ env.COUNT }}
+          docker tag ${{ env.EFCLUB_DJANGO }}:${{ env.VERSION}} ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.EFCLUB_DJANGO}}-${{ env.EFCLUB_DJANGO_VERSION }}
       - name: Docker push
         run: |
-          docker push ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.PROJECT_NAME}}-${{ env.COUNT }}
+          docker push ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.EFCLUB_DJANGO}}-${{ env.EFCLUB_DJANGO_VERSION }}
   deploy:
     runs-on: ubuntu-latest
-    needs: [create_docker_build]
-    env:
-      WORK_DIR: "/home/${{ secrets.USERNAME }}/deploy/"
+    needs: [group_bot, efclub_django]
     steps:
       - name: Git clone
         uses: actions/checkout@v2
@@ -57,8 +58,10 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd ${{ env.WORK_DIR }}
-            docker-compose stop ${{ env.PROJECT_NAME }}
-            docker container rm ${{ env.PROJECT_NAME }}
-            docker rmi ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.PROJECT_NAME}}-${{ env.COUNT }} -f
-            docker-compose up --force-recreate -d --build ${{ env.PROJECT_NAME }}
+            cd /home/${{ secrets.USERNAME }}/deploy/${{ env.PROJECT_NAME }}/${{ env.STAGE }}
+            docker-compose -f docker-compose-${{ env.PROJECT_NAME }}-${{ env.STAGE }}.yml down
+            docker container rm ${{ env.GROUP_BOT_NAME }}
+            docker container rm ${{ env.EFCLUB_DJANGO }}
+            docker rmi ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.GROUP_BOT_NAME}}-${{ env.GROUP_BOT_VERSION }} -f
+            docker rmi ${{ env.DOCKER_USER }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ env.EFCLUB_DJANGO}}-${{ env.EFCLUB_DJANGO_VERSION }} -f
+            docker-compose -f docker-compose-${{ env.PROJECT_NAME }}-${{ env.STAGE }}.yml up --force-recreate -d
