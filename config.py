@@ -9,14 +9,12 @@ from loguru import logger
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from peewee import SqliteDatabase, PostgresqlDatabase
 
-from db.settings import *
 import psycopg2
 
 #  определяем директорию проекта
 BASE_DIR = Path(__file__).resolve().parent
 
 # Загружаем переменные из файла .env
-
 load_dotenv()
 
 # service settings
@@ -36,12 +34,10 @@ with open(f"{BASE_DIR}/db/session.txt", 'r', encoding='utf-8') as f:
     SESSION_STRING = f.read()
 
 # set admins list
-me = os.getenv("ME_TELEGRAM_ID")
-admins_list = [me, '259984017', '455814456']
-DEBUG = int(os.getenv("DEBUG"))
-if not DEBUG:
-    # todo  что тут было?
-    admins_list.extend({})
+admins: str = os.getenv("ADMINS")
+admins_list: list[str] = admins.split(',')
+DEBUG: bool = bool(int(os.getenv("DEBUG"), 0))
+admins_list: list[str] = [admins_list[0]] if DEBUG else admins_list
 
 
 class EMOJI:
@@ -118,7 +114,8 @@ db = psql()
 #  *************** GETCOUSE API CONFIG ****************************
 
 REQUEST_LIMIT = 5
-KICK_RATE = kick_rate
-REQUEST_RATE = admin_rate
+KICK_RATE = int(os.getenv("KICK_RATE", 15))
+REQUEST_RATE = int(os.getenv("ADMIN_RATE", 20))
+LINK_EXPIRATION_TIME = int(os.getenv("LINK_EXPIRATION_TIME", 5))
 
 #  ********** END OF GETCOUSE API  CONFIG *************************
