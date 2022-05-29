@@ -221,8 +221,16 @@ async def get_link(telegram_id: int) -> str:
     # if not channel_id:
     #     return
     user_data: User = User.get_users_by_telegram_id(telegram_id=telegram_id)
+    if not user_data:
+        await send_message_to_admin(f'ссылку запросил пользователь отсутствующий в базе\n'
+                                    f'телеграм {telegram_id}')
+        return 'https://google.com'
+
     if user_data.status not in [Statuses.entered, Statuses.returned, Statuses.privileged]:
         return 'Вас нет в списках членов клуба, ссылка выслана не будет.'
+    if user_data.status not in [Statuses.entered, Statuses.returned, Statuses.privileged]:
+        month = user_data.date_joining_club.month
+        return f'Доступ откроется 1 - {month}'
 
     access = not user_data.got_invite
     answer = ''

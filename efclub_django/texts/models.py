@@ -100,6 +100,8 @@ class User(models.Model):
     got_invite = models.BooleanField(default=False, verbose_name='Получал инвайт ссылку')
     expiration_date = models.DateTimeField(
                                     auto_now=True, verbose_name='Дата окончания привилегии')
+    date_joining_club = models.DateTimeField(
+                                    auto_now=True, verbose_name='Дата записи о вступлении')
 
     class Meta:
         db_table = "users"

@@ -5,7 +5,7 @@ from aiogram.types import (
 
 from config import logger
 from models import Text
-from handlers.utils import get_user_position
+from handlers.utils import get_user_position, get_user_access
 from models import Statuses
 
 
@@ -96,7 +96,8 @@ def start_(*args, **kwargs) -> InlineKeyboardMarkup:
                                        InlineKeyboardButton(text='Отзывы', callback_data='reviews'),
                                     )
     telegram_id = kwargs.get('telegram_id')
-    if get_user_position(telegram_id=telegram_id) == 'club_not_got_link':
+    if (get_user_position(telegram_id=telegram_id) == 'club_not_got_link' and
+            get_user_access(telegram_id=telegram_id)):
         keyboard.add(inline_button_invite_link())
     return keyboard
 
@@ -149,10 +150,15 @@ def excluded_(*args, **kwargs) -> InlineKeyboardMarkup:
 @logger.catch
 def link_(*args, **kwargs) -> InlineKeyboardMarkup:
 
-    return InlineKeyboardMarkup(row_width=2).add(
-            inline_button_start(),
-            inline_button_invite_link(),
+    keyboard = InlineKeyboardMarkup(row_width=2).add(
+        inline_button_start(),
+
     )
+    telegram_id = kwargs.get('telegram_id')
+    if (get_user_position(telegram_id=telegram_id) == 'club_not_got_link' and
+            get_user_access(telegram_id=telegram_id)):
+        keyboard.add(inline_button_invite_link())
+    return keyboard
 
 
 @logger.catch
@@ -184,10 +190,10 @@ def wait_list_() -> InlineKeyboardMarkup:
 
 
 @logger.catch
-def make_keyboard_for_mailing(status: str) -> InlineKeyboardMarkup:
+def make_keyboard_for_mailing(status: str, got_invite: bool) -> InlineKeyboardMarkup:
     keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(row_width=2)
     keyboard.add(inline_button_link_user_menu())
-    if status in [Statuses.entered, Statuses.returned, Statuses.privileged]:
+    if status in [Statuses.entered, Statuses.returned, Statuses.privileged] and not got_invite:
         button = inline_button_invite_link()
         button.callback_data = 'get_invite_link_from_mailing'
         keyboard.add(button)

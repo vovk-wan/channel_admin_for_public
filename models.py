@@ -375,6 +375,8 @@ class User(BaseModel):
     status_updated = BooleanField(default=True, verbose_name='Обновлен статус')
     # получал инвайт ссылку
     got_invite = BooleanField(default=False, verbose_name='Получал инвайт ссылку')
+    date_joining_club = DateTimeField(
+        default=datetime.datetime.utcnow(), verbose_name='Дата записи о вступлении')
     expiration_date = DateTimeField(
         default=datetime.datetime.now(), verbose_name='Дата окончания привилегии')
 
@@ -442,6 +444,7 @@ class User(BaseModel):
                 new_status = Statuses.returned if user.status == Statuses.excluded else Statuses.entered
                 user.getcourse_id = getcourse_id
                 user.status = new_status
+                user.date_joining_club = datetime.datetime.utcnow()
                 user.status_updated = True
                 user.save()
                 return user
@@ -483,6 +486,20 @@ class User(BaseModel):
                 member=False, status=Statuses.waiting, status_updated=True
             )
             return result
+
+    @classmethod
+    @logger.catch
+    def update_privileged_user(cls: 'User') -> int:
+        """
+            Function updated users with status privileged
+            if expiration_date < today
+            set status excluded for user
+        """
+
+        return(
+            cls.update({cls.status: Statuses.excluded, cls.status_updated: True}).
+            where(cls.expiration_date < datetime.datetime.utcnow()).execute()
+        )
 
     @classmethod
     @logger.catch
@@ -547,15 +564,41 @@ class User(BaseModel):
         """Получить список пользователей для рассылки"""
         users = (
             cls.select().where(cls.status_updated == True).
-            where(cls.status.not_in([Statuses.challenger])).
+            where(cls.status.not_in([Statuses.challenger, Statuses.entered, Statuses.returned])).
             where(cls.telegram_id.is_null(False)).execute()
         )
         return [user for user in users if user.telegram_id]
 
     @classmethod
     @logger.catch
-    def un_set_status_updated_for_all(cls: 'User') -> list:
-        return cls.update(status_updated=False).execute()
+    def un_set_status_updated_except_members(cls: 'User') -> list:
+        return (
+            cls.update(status_updated=False).
+            where(cls.status.not_in([Statuses.entered, Statuses.returned])).
+            execute()
+        )
+
+    @classmethod
+    @logger.catch
+    def get_members_for_mailing_new_status(cls: 'User') -> list:
+        """Получить список пользователей для рассылки"""
+        users = (
+            cls.select().where(cls.status_updated == True).
+            where(cls.status.in_([Statuses.entered, Statuses.returned])).
+            where(cls.date_joining_club.month < datetime.datetime.now().month).
+            where(cls.status.in_([Statuses.entered, Statuses.returned])).
+            where(cls.telegram_id.is_null(False)).execute()
+        )
+        return [user for user in users if user.telegram_id]
+
+    @classmethod
+    @logger.catch
+    def un_set_status_updated_for_members(cls: 'User') -> list:
+        return (
+            cls.update(status_updated=False).
+            where(cls.status.not_in([Statuses.entered, Statuses.returned, Statuses.challenger])).
+            execute()
+        )
 
     @classmethod
     @logger.catch
@@ -639,3 +682,6 @@ if __name__ == '__main__':
 
     print(GetcourseGroup.get_club_group())
     print(Channel.get_channels())
+
+    # print(User.update_privileged_user())
+    print(User.get_members_for_mailing_new_status())

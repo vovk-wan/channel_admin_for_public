@@ -242,7 +242,7 @@ async def channel_maintenance() -> None:
 
     count = await mailing_new_status(users_with_updated_status)
 
-    User.un_set_status_updated_for_all()
+    User.un_set_status_updated_except_members()
     logger.info(f'{count} mail sends')
 
     waiting_group_id = GetcourseGroup.get_waiting_group()
@@ -273,7 +273,7 @@ async def channel_maintenance() -> None:
     users_with_updated_status = User.get_users_for_mailing_new_status()
 
     count = await mailing_new_status(users_with_updated_status)
-    User.un_set_status_updated_for_all()
+    User.un_set_status_updated_except_members()
     logger.info(f'{count} mail sends')
 
 
@@ -306,10 +306,22 @@ async def kick_hackers():
     logger.info(f' stop kick hackers: {datetime.datetime.utcnow()}')
 
 
+async def mailing_to_members():
+    """mailing for member of club"""
+    users_with_updated_status = User.get_members_for_mailing_new_status()
+    count = await mailing_new_status(users_with_updated_status)
+    User.un_set_status_updated_for_members()
+    logger.info(f'{count} mail sends')
+
+
 @logger.catch
 async def check_base():
     aioschedule.every(REQUEST_RATE).minutes.do(channel_maintenance)
     aioschedule.every(KICK_RATE).minutes.do(kick_hackers)
+    aioschedule.every().day.at("3:30").do(mailing_to_members)
     while True:
         await aioschedule.run_pending()
         await asyncio.sleep(1)
+
+if __name__ == '__main__':
+    asyncio.run(mailing_to_members())
