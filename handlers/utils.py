@@ -1,3 +1,4 @@
+import datetime
 from typing import Union, List
 
 from models import User, Statuses, Channel
@@ -35,6 +36,18 @@ def get_user_position(telegram_id: int) -> str:
         return get_position(user)
 
     return 'not_in_base'
+
+
+@logger.catch
+def get_user_access(telegram_id: int) -> bool:
+    """
+    Возвращает доступ пользователя к каналам и группам
+    """
+    access = False
+    user = User.get_users_by_telegram_id(telegram_id=telegram_id)
+    if user:
+        access = user.date_joining_club.month < datetime.datetime.now().month
+    return access
 
 
 @logger.catch
