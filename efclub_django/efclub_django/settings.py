@@ -31,6 +31,10 @@ SECRET_KEY = 'django-insecure-gc#1wm8w&g-(rvi6c8rcatm6ly7gpm&edtrlkkv=t401)211uc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = int(os.getenv('DEBUG'))
 
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://localhost',
+                        'http://185.231.153.76:8000', 'http://185.231.153.76',
+                        'http://127.0.0.1:8000', 'http://127.0.0.1', ]
+
 ALLOWED_HOSTS = ['*']
 
 
