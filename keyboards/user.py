@@ -70,7 +70,7 @@ def inline_button_invite_link() -> InlineKeyboardButton:
 def inline_button_link_user_menu() -> InlineKeyboardButton:
     """Возвращает кнопку со ссылкой на основное меню"""
 
-    return InlineKeyboardButton(text='Menu', callback_data='get_user_menu')
+    return InlineKeyboardButton(text='Меню', callback_data='get_user_menu')
 
 
 @logger.catch
@@ -78,7 +78,7 @@ def inline_button_link_wait_list() -> InlineKeyboardButton:
     """Возвращает кнопку с инвайт ссылкой на лист ожидания"""
     url = Text.get_link_waiting_list_text()
     return InlineKeyboardButton(
-        text='Ссылка на лист ожидания ', callback_data='start', url=url)
+        text='Ссылка на лист ожидания', callback_data='start', url=url)
 
 # ***** end inline buttons ****************
 
@@ -89,16 +89,25 @@ def start_(*args, **kwargs) -> InlineKeyboardMarkup:
         Возвращает клавиатуру основного меню
     """
 
-    keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(row_width=3).add(
-                                       inline_button_want(),
-                                       InlineKeyboardButton(text='О клубе', callback_data='about'),
-                                       InlineKeyboardButton(text='Тарифы', callback_data='prices'),
-                                       InlineKeyboardButton(text='Отзывы', callback_data='reviews'),
-                                    )
+    keyboard = InlineKeyboardMarkup()
     telegram_id = kwargs.get('telegram_id')
     if (get_user_position(telegram_id=telegram_id) == 'club_not_got_link' and
             get_user_access(telegram_id=telegram_id)):
-        keyboard.add(inline_button_invite_link())
+        keyboard.row(inline_button_invite_link())
+    keyboard.row(inline_button_want(),)
+    keyboard.row(
+        InlineKeyboardButton(text='Отзывы', callback_data='reviews'),
+        InlineKeyboardButton(text='О клубе', callback_data='about'),
+        InlineKeyboardButton(text='Тарифы', callback_data='prices'),
+    )
+
+    # keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(row_width=3).add(
+    #                                    inline_button_want(),
+    #                                    InlineKeyboardButton(text='О клубе', callback_data='about'),
+    #                                    InlineKeyboardButton(text='Тарифы', callback_data='prices'),
+    #                                    InlineKeyboardButton(text='Отзывы', callback_data='reviews'),
+                                    # )
+
     return keyboard
 
 
@@ -115,14 +124,14 @@ def link_pay_waiting_list_menu() -> InlineKeyboardMarkup:
     url: str = Text.get_link_to_pay()
     try:
         keyboard = InlineKeyboardMarkup().add(
-            inline_button_link_user_menu(),
             InlineKeyboardButton(text='Ссылка на оплату', callback_data='get_user_menu', url=url),
+            inline_button_link_user_menu(),
         )
     except aiogram.utils.exceptions.ButtonURLInvalid as err:
         logger.error(err)
         keyboard = InlineKeyboardMarkup().add(
-            inline_button_link_user_menu(),
             InlineKeyboardButton(text='Произошла ошибка', callback_data='get_user_menu'),
+            inline_button_link_user_menu(),
         )
     return keyboard
 
@@ -152,8 +161,8 @@ def link_(*args, **kwargs) -> InlineKeyboardMarkup:
 
     keyboard = InlineKeyboardMarkup(row_width=2).add(
         inline_button_start(),
-
     )
+
     telegram_id = kwargs.get('telegram_id')
     if (get_user_position(telegram_id=telegram_id) == 'club_not_got_link' and
             get_user_access(telegram_id=telegram_id)):

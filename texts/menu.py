@@ -54,7 +54,7 @@ class TextsUser:
 class AdminTexts:
     """Тексты в меню администратора"""
     #  текст стартового меню администраторов
-    start_admin: str = lambda: "Hello admin"
+    start_admin: str = lambda: "Меню администратора"
 
     # изменение группы листа ожидания
     waiting_group: str = lambda: 'Меняем группу Waiting list'
