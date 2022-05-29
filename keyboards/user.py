@@ -185,7 +185,7 @@ def club_got_link_(*args, **kwargs) -> InlineKeyboardMarkup:
 
 
 @logger.catch
-def wait_list_() -> InlineKeyboardMarkup:
+def wait_list_(*args, **kwargs) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(row_width=1).add(inline_button_start())
 
 

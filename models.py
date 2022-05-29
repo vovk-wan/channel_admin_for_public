@@ -68,6 +68,7 @@ class Text(BaseModel):
     for_entered = TextField(verbose_name='"Хочу в клуб" для тех кто может получить ссылку')
     for_entered_got_link = TextField(verbose_name='"Хочу в клуб" для тех кто уже получал ссылку')
 
+    link_waiting_list = CharField(max_length=255, verbose_name='Ссылка на лист ожидания')
     link_to_pay = CharField(verbose_name='Ссылка на лист ожидания')
     # link_to_pay_excluded = CharField(verbose_name='Ссылка на оплату для исключенных')
     # link_to_pay_waiting_list = CharField(
@@ -621,16 +622,6 @@ class User(BaseModel):
             function add privileged user
         """
         return (cls.update(status=Statuses.privileged, status_updated=False).
-                where(cls.telegram_id == telegram_id).execute()
-                )
-
-    @classmethod
-    @logger.catch
-    def delete_privileged_status_by_telegram_id(cls: 'User', telegram_id: int) -> bool:
-        """
-            function делете privileged user
-        """
-        return (cls.update(status=Statuses.challenger, status_updated=True).
                 where(cls.telegram_id == telegram_id).execute()
                 )
 
