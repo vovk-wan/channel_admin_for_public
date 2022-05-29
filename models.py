@@ -564,15 +564,41 @@ class User(BaseModel):
         """Получить список пользователей для рассылки"""
         users = (
             cls.select().where(cls.status_updated == True).
-            where(cls.status.not_in([Statuses.challenger])).
+            where(cls.status.not_in([Statuses.challenger, Statuses.entered, Statuses.returned])).
             where(cls.telegram_id.is_null(False)).execute()
         )
         return [user for user in users if user.telegram_id]
 
     @classmethod
     @logger.catch
-    def un_set_status_updated_for_all(cls: 'User') -> list:
-        return cls.update(status_updated=False).execute()
+    def un_set_status_updated_except_members(cls: 'User') -> list:
+        return (
+            cls.update(status_updated=False).
+            where(cls.status.not_in([Statuses.entered, Statuses.returned])).
+            execute()
+        )
+
+    @classmethod
+    @logger.catch
+    def get_members_for_mailing_new_status(cls: 'User') -> list:
+        """Получить список пользователей для рассылки"""
+        users = (
+            cls.select().where(cls.status_updated == True).
+            where(cls.status.in_([Statuses.entered, Statuses.returned])).
+            where(cls.date_joining_club.month < datetime.datetime.now().month).
+            where(cls.status.in_([Statuses.entered, Statuses.returned])).
+            where(cls.telegram_id.is_null(False)).execute()
+        )
+        return [user for user in users if user.telegram_id]
+
+    @classmethod
+    @logger.catch
+    def un_set_status_updated_for_members(cls: 'User') -> list:
+        return (
+            cls.update(status_updated=False).
+            where(cls.status.not_in([Statuses.entered, Statuses.returned, Statuses.challenger])).
+            execute()
+        )
 
     @classmethod
     @logger.catch
@@ -656,3 +682,6 @@ if __name__ == '__main__':
 
     print(GetcourseGroup.get_club_group())
     print(Channel.get_channels())
+
+    # print(User.update_privileged_user())
+    print(User.get_members_for_mailing_new_status())
