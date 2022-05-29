@@ -375,6 +375,8 @@ class User(BaseModel):
     status_updated = BooleanField(default=True, verbose_name='Обновлен статус')
     # получал инвайт ссылку
     got_invite = BooleanField(default=False, verbose_name='Получал инвайт ссылку')
+    date_joining_club = DateTimeField(
+        default=datetime.datetime.utcnow(), verbose_name='Дата записи о вступлении')
     expiration_date = DateTimeField(
         default=datetime.datetime.now(), verbose_name='Дата окончания привилегии')
 
@@ -442,6 +444,7 @@ class User(BaseModel):
                 new_status = Statuses.returned if user.status == Statuses.excluded else Statuses.entered
                 user.getcourse_id = getcourse_id
                 user.status = new_status
+                user.date_joining_club = datetime.datetime.utcnow()
                 user.status_updated = True
                 user.save()
                 return user
@@ -483,6 +486,20 @@ class User(BaseModel):
                 member=False, status=Statuses.waiting, status_updated=True
             )
             return result
+
+    @classmethod
+    @logger.catch
+    def update_privileged_user(cls: 'User') -> int:
+        """
+            Function updated users with status privileged
+            if expiration_date < today
+            set status excluded for user
+        """
+
+        return(
+            cls.update({cls.status: Statuses.excluded, cls.status_updated: True}).
+            where(cls.expiration_date < datetime.datetime.utcnow()).execute()
+        )
 
     @classmethod
     @logger.catch
