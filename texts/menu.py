@@ -7,7 +7,6 @@ from models import Text
 
 @dataclass
 class TextsUser:
-    """TODO Заменить на запросы к бд"""
     #  Приветственное сообщение Основное меню
     start: Callable = Text.get_start_text
 

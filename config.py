@@ -7,7 +7,7 @@ from aiogram import Bot, Dispatcher
 from dotenv import load_dotenv
 from loguru import logger
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from peewee import SqliteDatabase, PostgresqlDatabase
+from peewee import PostgresqlDatabase
 
 import psycopg2
 
@@ -50,8 +50,8 @@ class EMOJI:
 #  ********** LOGGER CONFIG ********************************
 LOGGING_DIRECTORY = 'logs'
 LOGGING_FILENAME = 'efcliub.log'
-# TODO ??????????? BASE_DIR ????
-PATH = os.getcwd()
+
+PATH = BASE_DIR
 if not os.path.exists('./logs'):
     os.mkdir("./logs")
 today = datetime.datetime.today().strftime("%Y-%m-%d")
@@ -76,23 +76,6 @@ logger.info('Start logging to: {file_path}')
 
 
 #  ********** DATABASE CONFIG *************************
-# TODO удалить??????????????
-db_file_name = f'{BASE_DIR}/db/users.db'
-def sqlite():
-    full_path = os.path.join(PATH, db_file_name)
-    db = SqliteDatabase(
-        full_path,
-        pragmas={
-            'journal_mode': 'wal',
-            'cache_size': -1 * 64000,
-            'foreign_keys': 1,
-            'ignore_check_constraints': 0,
-            'synchronous': 0
-        }
-    )
-    return db
-
-
 @logger.catch
 def psql():
     POSTGRES_DB = os.getenv('POSTGRES_DB')
