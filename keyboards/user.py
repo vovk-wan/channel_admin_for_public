@@ -123,15 +123,15 @@ def about_(*args, **kwargs) -> InlineKeyboardMarkup:
 def link_pay_waiting_list_menu() -> InlineKeyboardMarkup:
     url: str = Text.get_link_to_pay()
     try:
-        keyboard = InlineKeyboardMarkup().add(
-            InlineKeyboardButton(text='Ссылка на оплату', callback_data='get_user_menu', url=url),
+        keyboard = InlineKeyboardMarkup().row(
             inline_button_link_user_menu(),
+            InlineKeyboardButton(text='Ссылка на оплату', callback_data='get_user_menu', url=url),
         )
     except aiogram.utils.exceptions.ButtonURLInvalid as err:
         logger.error(err)
-        keyboard = InlineKeyboardMarkup().add(
-            InlineKeyboardButton(text='Произошла ошибка', callback_data='get_user_menu'),
+        keyboard = InlineKeyboardMarkup().row(
             inline_button_link_user_menu(),
+            InlineKeyboardButton(text='Произошла ошибка', callback_data='get_user_menu'),
         )
     return keyboard
 
