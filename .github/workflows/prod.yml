@@ -11,7 +11,7 @@ env:
   VERSION: "ver-${{ github.sha }}"
 on:
   push:
-    branches: [ main ]
+    branches: [ dev ]
 jobs:
   group_bot:
     runs-on: ubuntu-latest
