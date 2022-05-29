@@ -63,7 +63,7 @@ def inline_button_invite_link() -> InlineKeyboardButton:
     """Возвращает кнопку с инвайт ссылкой"""
 
     return InlineKeyboardButton(
-        text='Получить инвайт', callback_data='get_invite_link')
+        text='Получить пригласительную ссылку', callback_data='get_invite_link')
 
 
 @logger.catch
@@ -158,15 +158,15 @@ def excluded_(*args, **kwargs) -> InlineKeyboardMarkup:
 
 @logger.catch
 def link_(*args, **kwargs) -> InlineKeyboardMarkup:
-
-    keyboard = InlineKeyboardMarkup(row_width=2).add(
-        inline_button_start(),
-    )
-
+    keyboard = InlineKeyboardMarkup()
     telegram_id = kwargs.get('telegram_id')
     if (get_user_position(telegram_id=telegram_id) == 'club_not_got_link' and
             get_user_access(telegram_id=telegram_id)):
-        keyboard.add(inline_button_invite_link())
+        keyboard.row(inline_button_invite_link())
+    keyboard.row(
+        inline_button_start(),
+    )
+
     return keyboard
 
 
@@ -200,15 +200,15 @@ def wait_list_(*args, **kwargs) -> InlineKeyboardMarkup:
 
 @logger.catch
 def make_keyboard_for_mailing(status: str, got_invite: bool) -> InlineKeyboardMarkup:
-    keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(inline_button_link_user_menu())
+    keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup()
     if status in [Statuses.entered, Statuses.returned, Statuses.privileged] and not got_invite:
         button = inline_button_invite_link()
         button.callback_data = 'get_invite_link_from_mailing'
-        keyboard.add(button)
+        keyboard.row(button)
     elif status in [Statuses.excluded]:
         button = inline_button_want()
         button.callback_data = 'get_user_menu_want'
-        keyboard.add(button)
+        keyboard.row(button)
+    keyboard.row(inline_button_link_user_menu())
 
     return keyboard
