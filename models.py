@@ -7,7 +7,7 @@ from peewee import (
     CharField, BooleanField, IntegerField, TextField, DateTimeField, BigIntegerField)
 from peewee import Model
 
-from config import logger, db, db_file_name
+from config import logger, db
 
 
 @dataclass(frozen=True)
@@ -676,12 +676,3 @@ if __name__ == '__main__':
     test_user_list = (
         (f'test{user}', ''.join(random.choices(string.ascii_letters, k=5)))
         for user in range(1, 6))
-
-    if recreate:
-        recreate_db(db_file_name)
-
-    print(GetcourseGroup.get_club_group())
-    print(Channel.get_channels())
-
-    # print(User.update_privileged_user())
-    print(User.get_members_for_mailing_new_status())

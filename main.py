@@ -10,7 +10,7 @@ import datetime
 import asyncio
 from aiogram import executor
 
-from config import dp, logger, bot, db_file_name, admins_list, GROUP_BOT_VERSION
+from config import dp, logger, bot, admins_list, GROUP_BOT_VERSION
 from handlers.menu import menu_register_handlers
 from models import recreate_db
 from scheduler_funcs import check_base, edit_group_list
