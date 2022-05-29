@@ -12,7 +12,6 @@ from aiogram import executor
 
 from config import dp, logger, bot, admins_list, GROUP_BOT_VERSION
 from handlers.menu import menu_register_handlers
-from models import recreate_db
 from scheduler_funcs import check_base, edit_group_list
 
 menu_register_handlers(dp=dp)
@@ -25,7 +24,7 @@ async def send_report_to_admins(text: str) -> None:
         try:
             await bot.send_message(chat_id=admin_id, text=text)
         except Exception as err:
-            logger.error(err)
+            logger.error(f'{err}, chat_id={admin_id}')
 
 
 @logger.catch

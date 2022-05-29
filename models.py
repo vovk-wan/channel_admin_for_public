@@ -664,15 +664,3 @@ def recreate_db(_db_file_name: str) -> None:
             drop_db()
         db.create_tables([User, Channel, Group, GetcourseGroup, UserStatus, Text, MessageNewStatus ], safe=True)
         logger.info('DB Recreated')
-
-
-if __name__ == '__main__':
-    # test()
-    recreate = 0
-    add_test_users = 1
-    add_admins = 0
-    import random
-    import string
-    test_user_list = (
-        (f'test{user}', ''.join(random.choices(string.ascii_letters, k=5)))
-        for user in range(1, 6))

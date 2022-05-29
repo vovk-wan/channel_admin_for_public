@@ -3,7 +3,7 @@ version: '3.9'
 services:
   efclub_django:
     container_name: efclub_django
-    image: deskent/deskent:efclub_django-${EFCLUB_DJANGO_VERSION}
+    image: bibared/efclub:efclub_django-${EFCLUB_DJANGO_VERSION}
     command: >
       sh -c "python manage.py makemigrations &&
              python manage.py migrate &&
@@ -16,7 +16,8 @@ services:
     volumes:
       - ./efclub_django/logs:/app/logs
   group_bot:
-    image: deskent/deskent:group_bot-${GROUP_BOT_VERSION}
+    image: bibared/efclub:group_bot-${GROUP_BOT_VERSION}
+    container_name: group_bot
     env_file:
       - ./.env
     volumes:
