@@ -44,13 +44,13 @@ async def start_menu_admin(callback: CallbackQuery, state: FSMContext) -> None:
     chat_id = callback.message.chat.id
     group_id = GetcourseGroup.get_club_group()
     club_group_name = Group.get_name_group_by_id(group_id)
-    groups = f'\nтекущая группа членов клуба "{club_group_name}-{group_id}'
+    groups = f'\nТекущая группа членов клуба ГК "{club_group_name} - {group_id}'
     group_id = GetcourseGroup.get_waiting_group()
     waiting_group_name = Group.get_name_group_by_id(group_id)
-    groups += f'\nтекущая группа для листа ожидания "{waiting_group_name}-{group_id}'
+    groups += f'\n\nТекущая группа для листа ожидания "{waiting_group_name} - {group_id}'
     channel_list = Channel.get_channels()
     channel_names = "\n".join(f'{channel.name} - {channel.channel_id}' for channel in channel_list)
-    channels = f'\n\nтекущие каналы \n {channel_names}'
+    channels = f'\n\nТекущие каналы: \n{channel_names}'
 
     text = AdminTexts.get_menu_text(name_state)()
     text = text + groups + channels
@@ -189,7 +189,7 @@ async def channel_registration(callback: CallbackQuery, state: FSMContext) -> No
         for channel in channels:
             keyboard_group.row(
                 InlineKeyboardButton(text=f'{channel.name}', callback_data='return'),
-                InlineKeyboardButton(text='удалить', callback_data=f'delete:{channel.channel_id}')
+                InlineKeyboardButton(text='Удалить', callback_data=f'delete:{channel.channel_id}')
             )
         keyboard_group.row(
             InlineKeyboardButton(text='Добавить', callback_data='add_channel'),
