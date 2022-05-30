@@ -95,6 +95,7 @@ async def start_menu_handler(message: Message, state: FSMContext) -> None:
     except (
                         aiogram.utils.exceptions.MessageNotModified,
                         aiogram.utils.exceptions.MessageTextIsEmpty,
+                        aiogram.utils.exceptions.MessageToEditNotFound,
                 ) as err:
         logger.error(err)
         await state.finish()
