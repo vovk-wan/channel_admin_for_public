@@ -77,10 +77,14 @@ async def start_menu_handler(message: Message, state: FSMContext) -> None:
         try:
             start_message = await bot.send_message(
                 chat_id=telegram_id, text=text, reply_markup=user.start_(telegram_id=telegram_id))
-        except aiogram.utils.exceptions.MessageTextIsEmpty as err:
+        except (aiogram.utils.exceptions.MessageTextIsEmpty,
+                aiogram.utils.exceptions.Unauthorized,
+                aiogram.utils.exceptions.CantTalkWithBots,
+                )as err:
             logger.error(err)
+            logger.info(message.chat.type)
+            return
         await state.update_data(start_message=start_message.message_id)
-        return
     try:
         await bot.edit_message_text(
             text=text,
@@ -90,7 +94,7 @@ async def start_menu_handler(message: Message, state: FSMContext) -> None:
         )
     except (
                         aiogram.utils.exceptions.MessageNotModified,
-                        aiogram.utils.exceptions.MessageTextIsEmpty
+                        aiogram.utils.exceptions.MessageTextIsEmpty,
                 ) as err:
         logger.error(err)
         await state.finish()
