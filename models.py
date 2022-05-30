@@ -379,7 +379,7 @@ class User(BaseModel):
     date_joining_club = DateTimeField(
         default=datetime.datetime.utcnow(), verbose_name='Дата записи о вступлении')
     expiration_date = DateTimeField(
-        default=datetime.datetime.now(), verbose_name='Дата окончания привилегии')
+        default=datetime.datetime.utcnow(), verbose_name='Дата окончания привилегии')
 
     class Meta:
         db_table = "users"

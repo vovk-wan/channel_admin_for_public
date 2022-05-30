@@ -1,3 +1,6 @@
+import datetime
+
+import django.utils.timezone
 from django.db import models
 
 # Create your models here.
@@ -92,16 +95,14 @@ class User(models.Model):
     )
     phone = models.CharField(max_length=255, unique=True, verbose_name="телефон")
     telegram_id = models.BigIntegerField(
-        unique=True, default=None, null=True, verbose_name="id пользователя в телеграмм")
+        unique=True, default=None, null=True, blank=True, verbose_name="id пользователя в телеграмм")
     status = models.CharField(max_length=50, choices=statuses, verbose_name='Статус пользователя')
     # когда статус обновлен проверяется нужно ли отправить сообщение и значение меняется на False
     status_updated = models.BooleanField(default=True, verbose_name='Обновлен статус')
     # получал инвайт ссылку
     got_invite = models.BooleanField(default=False, verbose_name='Получал инвайт ссылку')
-    expiration_date = models.DateTimeField(
-                                    auto_now=True, verbose_name='Дата окончания привилегии')
-    date_joining_club = models.DateTimeField(
-                                    auto_now=True, verbose_name='Дата записи о вступлении')
+    expiration_date = models.DateTimeField(default=django.utils.timezone.now, verbose_name='Дата окончания привилегии')
+    date_joining_club = models.DateTimeField(verbose_name='Дата записи о вступлении')
 
     class Meta:
         db_table = "users"
