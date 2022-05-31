@@ -596,9 +596,11 @@ class User(BaseModel):
     @logger.catch
     def un_set_status_updated_for_members(cls: 'User') -> list:
         return (
-            cls.update(status_updated=False).
-            where(cls.status.not_in([Statuses.entered, Statuses.returned, Statuses.challenger])).
-            execute()
+            cls.update(status_updated=False).where(cls.status_updated == True).
+            where(cls.status.in_([Statuses.entered, Statuses.returned])).
+            where(cls.date_joining_club.month < datetime.datetime.now().month).
+            where(cls.status.in_([Statuses.entered, Statuses.returned])).
+            where(cls.telegram_id.is_null(False)).execute()
         )
 
     @classmethod

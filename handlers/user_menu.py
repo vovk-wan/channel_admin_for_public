@@ -107,7 +107,14 @@ async def start_menu_handler(message: Message, state: FSMContext) -> None:
         logger.error(err)
         logger.info(message.chat.type)
     if not mailing:
-        await message.delete()
+        try:
+            await message.delete()
+        except (
+                aiogram.utils.exceptions.MessageCantBeDeleted,
+                aiogram.utils.exceptions.MessageToDeleteNotFound,
+        ) as err:
+            logger.error(err)
+            logger.info(message.chat.type)
 
 
 @logger.catch
