@@ -69,42 +69,45 @@ async def start_menu_handler(message: Message, state: FSMContext) -> None:
     data = await state.get_data()
     contact_message = data.get('contact_message')
     if contact_message:
-        await bot.delete_message(chat_id=chat_id, message_id=contact_message)
+        try:
+            await bot.delete_message(chat_id=chat_id, message_id=contact_message)
+        except (
+                aiogram.utils.exceptions.MessageCantBeDeleted,
+                aiogram.utils.exceptions.MessageToDeleteNotFound,
+        )as err:
+            logger.error(err)
         data.pop('contact_message')
         await state.set_data(data)
-    start_message = data.get('start_message')
-    if not start_message:
-        try:
-            start_message = await bot.send_message(
-                chat_id=telegram_id, text=text, reply_markup=user.start_(telegram_id=telegram_id))
-        except (aiogram.utils.exceptions.MessageTextIsEmpty,
-                aiogram.utils.exceptions.Unauthorized,
-                aiogram.utils.exceptions.CantTalkWithBots,
-                )as err:
-            logger.error(err)
-            logger.info(message.chat.type)
-            return
-        await state.update_data(start_message=start_message.message_id)
-    try:
-        await bot.edit_message_text(
-            text=text,
-            chat_id=chat_id,
-            message_id=start_message,
-            reply_markup=user.start_(telegram_id=telegram_id),
-        )
-    except (
-                        aiogram.utils.exceptions.MessageNotModified,
-                        aiogram.utils.exceptions.MessageTextIsEmpty,
-                        aiogram.utils.exceptions.MessageToEditNotFound,
-                ) as err:
-        logger.error(err)
-        await state.finish()
-        await start_menu_handler(message=message, state=state)
-        return
-    await message.delete()
 
-    # await bot.edit_message_reply_markup(
-    #     reply_markup=user.start_(), chat_id=message.chat.id, message_id=start_message)
+    mailing = data.get('mailing')
+    if mailing:
+        data.pop('mailing')
+        await state.set_data(data)
+
+    start_message = data.get('start_message')
+    if start_message:
+        try:
+            await bot.delete_message(chat_id=chat_id, message_id=1)
+        except (
+                aiogram.utils.exceptions.MessageCantBeDeleted,
+                aiogram.utils.exceptions.MessageToDeleteNotFound,
+        ) as err:
+            logger.error(err)
+        data.pop('start_message')
+        await state.set_data(data)
+
+    try:
+        start_message = await bot.send_message(
+            chat_id=telegram_id, text=text, reply_markup=user.start_(telegram_id=telegram_id))
+        await state.update_data(start_message=start_message.message_id)
+    except (aiogram.utils.exceptions.MessageTextIsEmpty,
+            aiogram.utils.exceptions.Unauthorized,
+            aiogram.utils.exceptions.CantTalkWithBots,
+            )as err:
+        logger.error(err)
+        logger.info(message.chat.type)
+    if not mailing:
+        await message.delete()
 
 
 @logger.catch
@@ -117,7 +120,13 @@ async def user_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
 
     contact_message = data.get('contact_message')
     if contact_message:
-        await bot.delete_message(chat_id=chat_id, message_id=contact_message)
+        try:
+            await bot.delete_message(chat_id=chat_id, message_id=contact_message)
+        except (
+                aiogram.utils.exceptions.MessageCantBeDeleted,
+                aiogram.utils.exceptions.MessageToDeleteNotFound,
+        )as err:
+            logger.error(err)
         data.pop('contact_message')
         await state.set_data(data)
     telegram_id = callback.from_user.id
@@ -132,6 +141,7 @@ async def user_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
     if not start_message:
         menu = await bot.send_message(chat_id=callback.message.chat.id, text='menu')
         start_message = menu.message_id
+        await state.update_data({'start_message': start_message})
         logger.debug('deleted start menu')
         # return
 

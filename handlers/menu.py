@@ -18,13 +18,15 @@ from states import MenuState, AdminState, get_state_name
 
 @logger.catch
 async def get_user_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
-    await state.finish()
+    await state.set_state(MenuState.start)
     callback.message.from_user.id = callback.from_user.id
     if callback.data == 'get_user_menu':
+        await state.update_data({'mailing': 'true'})
         await start_menu_handler(callback.message, state=state)
     else:
         callback.data = 'want'
         await state.set_state(MenuState.start)
+        await state.update_data({'contact_message': callback.message.message_id})
         await user_menu_handler(callback, state)
     await callback.answer()
 
