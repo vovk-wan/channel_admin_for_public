@@ -367,7 +367,7 @@ class User(BaseModel):
     Model for table users
      """
     getcourse_id = CharField(
-        default=None, null=True, unique=True, verbose_name="id пользователя в getcourse")
+        default=None, null=True, verbose_name="id пользователя в getcourse")
     phone = CharField(unique=True, verbose_name="Телефон пользователя")
     telegram_id = BigIntegerField(
         unique=True, default=None, null=True, verbose_name="id пользователя в телеграмм")
@@ -440,15 +440,24 @@ class User(BaseModel):
         return: str
         """
         user = cls.get_user_by_phone(phone=phone[-10:])
+        user_by_id = cls.select().where(cls.getcourse_id == getcourse_id).first()
         if user:
             if user.status not in [Statuses.entered, Statuses.returned]:
                 new_status = Statuses.returned if user.status == Statuses.excluded else Statuses.entered
                 user.getcourse_id = getcourse_id
+                user.phone = phone
                 user.status = new_status
                 user.date_joining_club = datetime.datetime.utcnow()
                 user.status_updated = True
                 user.save()
                 return user
+        elif user_by_id:
+            if not user.status in [Statuses.entered, Statuses.returned] and user.status != Statuses.waiting:
+                user.getcourse_id = getcourse_id
+                user.status = Statuses.waiting
+                user.phone = phone
+                user.status_updated = True
+                return user.save()
         else:
             result = cls.create(
                             getcourse_id=getcourse_id, phone=phone,
@@ -467,12 +476,13 @@ class User(BaseModel):
         telegram_id: str
         return: str
         """
-        user = cls.get_user_by_phone(phone=phone)
+        user = cls.get_user_by_phone(phone=phone[-10:])
         user_by_id = cls.select().where(cls.getcourse_id == getcourse_id).first()
         if user:
             if not user.status in [Statuses.entered, Statuses.returned] and user.status != Statuses.waiting:
                 user.getcourse_id = getcourse_id
                 user.status = Statuses.waiting
+                user.phone = phone
                 user.status_updated = True
                 return user.save()
         elif user_by_id:
@@ -480,6 +490,7 @@ class User(BaseModel):
                 user.getcourse_id = getcourse_id
                 user.status = Statuses.waiting
                 user.status_updated = True
+                user.phone = phone
                 return user.save()
         else:
             result = cls.create(
