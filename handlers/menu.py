@@ -13,6 +13,7 @@ from handlers.admin_menu import (
 from handlers.user_menu import (
     user_menu_handler, cancel_handler, add_phone_number, start_menu_handler
 )
+from handlers.utils import check_message_private
 from states import MenuState, AdminState, get_state_name
 
 
@@ -44,6 +45,7 @@ async def get_invite_link_from_mailing(callback: CallbackQuery, state: FSMContex
         logger.info(err)
 
 
+@check_message_private
 @logger.catch
 async def command_admin_handler(message: Message, state: FSMContext) -> None:
     """
@@ -150,6 +152,7 @@ def menu_register_handlers(dp: Dispatcher) -> None:
         MenuState.club_got_link, MenuState.club_not_got_link, MenuState.want,
         MenuState.reviews, MenuState.prices, MenuState.not_in_base, MenuState.wait_list
     ])
+
     dp.register_message_handler(cancel_handler, commands=['отмена', 'cancel'], state="*")
     dp.register_message_handler(
         add_phone_number, content_types=['contact'], state=MenuState.want)

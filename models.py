@@ -547,7 +547,8 @@ class User(BaseModel):
     @logger.catch
     def delete_user_from_waiting_list_by_getcourse_id(cls: 'User', getcourse_id: List[Any]) -> int:
         """
-        exclude user by getcourse id
+        # TODO может и не нужно
+        delete user by getcourse id
         """
         return (
           cls.delete().

@@ -12,7 +12,7 @@ from aiogram.types.chat import ChatInviteLink
 
 from config import logger, bot, EMOJI, LINK_EXPIRATION_TIME
 from handlers import utils
-from handlers.utils import get_all_admins
+from handlers.utils import get_all_admins, check_message_private
 from keyboards import user
 from models import User, Channel, Statuses
 from scheduler_funcs import send_message_to_admin
@@ -45,6 +45,7 @@ class Keyboard:
             return cls.start
 
 
+@check_message_private
 @logger.catch
 async def cancel_handler(message: Message, state: FSMContext) -> None:
     """
@@ -55,6 +56,7 @@ async def cancel_handler(message: Message, state: FSMContext) -> None:
     await start_menu_handler(message, state=state)
 
 
+@check_message_private
 @logger.catch
 async def start_menu_handler(message: Message, state: FSMContext) -> None:
     """

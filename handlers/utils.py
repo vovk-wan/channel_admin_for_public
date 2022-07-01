@@ -1,8 +1,9 @@
 import datetime
-from typing import Union, List
+from functools import wraps
+from typing import Union, List, Callable, Any
 
 from models import User, Statuses, Channel
-from aiogram.types import Chat
+from aiogram.types import Chat, Message
 from config import logger, bot
 
 
@@ -87,3 +88,20 @@ async def get_all_admins() -> tuple:
             logger.error(err)
     admins_name: tuple = await get_channel_admin(channels=channels)
     return admins_name
+
+
+@logger.catch
+def check_message_private(func: Callable) -> Callable:
+    """decorator for handler check message is private"""
+
+    @wraps(func)
+    async def wrapper(*args, **kwargs) -> Any:
+        message: Message = args[0]
+        message_chat_id = message.from_user.id
+        chat_id = message.chat.id
+        if message_chat_id == chat_id:
+            logger.debug(f"Message {message_chat_id} == {chat_id}.")
+            return await func(*args, **kwargs)
+        logger.debug(f"Message {message_chat_id} != {chat_id}.")
+
+    return wrapper

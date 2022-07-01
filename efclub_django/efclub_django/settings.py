@@ -174,3 +174,5 @@ logger.configure(
 )
 logger.info('Start logging to:', file_path)
 #  ********** END OF LOGGER CONFIG *************************
+
+DJANGO_SETTINGS_MODULE = BASE_DIR / 'efclub_django' / 'settings.py'

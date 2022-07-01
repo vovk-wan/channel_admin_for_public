@@ -1,9 +1,43 @@
 import datetime
+from dataclasses import dataclass
 
 import django.utils.timezone
 from django.db import models
 
-# Create your models here.
+
+@dataclass(frozen=True)
+class SourceData:
+    waiting_list: str = 'waiting_list'
+    club: str = 'club'
+
+
+@dataclass(frozen=True)
+class Statuses:
+    challenger: str = 'challenger'
+    waiting: str = 'waiting'
+    entered: str = 'entered'
+    returned: str = 'returned'
+    excluded: str = 'excluded'
+    privileged: str = 'privileged'
+
+
+@dataclass(frozen=True)
+class DefaultTexts:
+    start: str = 'Тест в основном меню'
+    about: str = 'Текст о клубе'
+    prices: str = 'Текст о тарифах'
+    reviews: str = 'Текст с отзывами'
+    for_mailing: str = 'Текст со ссылкой на оплату'
+    for_invite: str = 'Текст вместе с пригласительными ссылками'
+    for_get_phone: str = 'Текст для запроса контакта'
+    for_challenger: str = '"Хочу в клуб" новичков'
+    for_waiting_list: str = '"Хочу в клуб" для листа ожидания'
+    for_excluded: str = '"Хочу в клуб" исключенных'
+    for_entered: str = '"Хочу в клуб" для тех кто может получить ссылку'
+    for_entered_got_link: str = '"Хочу в клуб" для тех кто получал ссылку'
+
+    link_waiting_list: str = 'https://getcourse.io/'
+    link_to_pay: str = 'https://getcourse.io/'
 
 
 class Text(models.Model):
@@ -102,7 +136,7 @@ class User(models.Model):
     # получал инвайт ссылку
     got_invite = models.BooleanField(default=False, verbose_name='Получал инвайт ссылку')
     expiration_date = models.DateTimeField(default=django.utils.timezone.now, verbose_name='Дата окончания привилегии')
-    date_joining_club = models.DateTimeField(verbose_name='Дата записи о вступлении')
+    date_joining_club = models.DateTimeField(auto_now_add=True, verbose_name='Дата записи о вступлении')
 
     class Meta:
         db_table = "users"
