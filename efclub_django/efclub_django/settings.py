@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'texts',
 ]
 
@@ -173,6 +174,8 @@ logger.configure(
     ]
 )
 logger.info('Start logging to:', file_path)
+
+LOGGER = logger
 #  ********** END OF LOGGER CONFIG *************************
 
 DJANGO_SETTINGS_MODULE = BASE_DIR / 'efclub_django' / 'settings.py'

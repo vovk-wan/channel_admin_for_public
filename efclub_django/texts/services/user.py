@@ -1,6 +1,7 @@
 import datetime
 from efclub_django.settings import logger
 from texts.models import Statuses, SourceData, User
+from django.db.models.query import QuerySet
 
 
 class DBIUser:
@@ -8,18 +9,19 @@ class DBIUser:
 
     @classmethod
     @logger.catch
-    def get_list_users_for_exclude(cls: 'DBIUser', getcourse_id: tuple) -> tuple:
+    def get_list_users_for_exclude(cls: 'DBIUser', getcourse_id: tuple = tuple()) -> QuerySet:
         """
         Returns a list of users who are not present in the latest update
         """
 
         exclude_users = (
             cls.model.objects.
+            only('telegram_id').
             exclude(getcourse_id__in=getcourse_id).
             filter(status__in=[Statuses.entered, Statuses.returned]).
             filter(telegram_id__isnull=False).all()
         )
-        return tuple(user.telegram_id for user in exclude_users)
+        return exclude_users
 
     @classmethod
     @logger.catch
@@ -46,7 +48,9 @@ class DBIUser:
         """
         count = 0
         if source == SourceData.club:
+            cls.exclude_user_by_getcourse_id([user.get('getcourse_id') for user in users])
             for user in users:
+
                 count += bool(cls.update_users_from_club(**user))
         elif source == SourceData.waiting_list:
             for user in users:
@@ -76,7 +80,7 @@ class DBIUser:
                 user.save()
                 return user
         elif user_by_id:
-            if not user_by_id.status in [Statuses.entered, Statuses.returned]:
+            if user_by_id.status not in [Statuses.entered, Statuses.returned]:
                 user_by_id.getcourse_id = getcourse_id
                 new_status = Statuses.returned if user_by_id.status == Statuses.excluded else Statuses.entered
                 user_by_id.status_updated = new_status != user_by_id.status
@@ -108,7 +112,7 @@ class DBIUser:
         user = cls.get_user_by_phone(phone=phone[-10:])
         user_by_id = cls.model.objects.filter(getcourse_id=getcourse_id).first()
         if user:
-            if not user.status in [Statuses.entered, Statuses.returned, Statuses.excluded]:
+            if user.status not in [Statuses.entered, Statuses.returned, Statuses.excluded]:
                 user.getcourse_id = getcourse_id
                 user.status_updated = user.status != Statuses.waiting
                 user.status = Statuses.waiting
@@ -180,45 +184,64 @@ class DBIUser:
         """
         return [
             user.telegram_id
-            for user in cls.model.objects.filter(status=Statuses.waiting).all()
-            if user.telegram_id
+            for user in cls.model.objects.filter(status=Statuses.waiting).
+            filter(telegram_id__isnull=False).all()
         ]
 
     @classmethod
     @logger.catch
-    def get_users_for_mailing_new_status(cls: 'DBIUser') -> list:
+    def get_users_for_mailing_new_status(cls: 'DBIUser') -> QuerySet:
         """Получить список пользователей для рассылки"""
         users = (
-            cls.model.objects.filter(status_updated=True).
-            exclude(status__in=[Statuses.challenger, Statuses.entered, Statuses.returned]).
-            filter(telegram_id__isnull=False).all()
+            cls.model.objects.only('telegram_id', 'got_invite', 'status').
+                exclude(status__in=[Statuses.challenger, Statuses.entered, Statuses.returned]).
+                filter(status_updated=True).filter(telegram_id__isnull=False).
+            all()
         )
-        return [user for user in users if user.telegram_id]
+        return users
 
     @classmethod
     @logger.catch
-    def un_set_status_updated_except_members(cls: 'DBIUser') -> list:
+    def un_set_status_updated_except_members(cls: 'DBIUser') -> int:
+        """
+        Removes the "updated" status for users excluding entered and returned.
+        """
         return (
-            cls.model.objects.exclude(status__in=[Statuses.entered, Statuses.returned]).all().
+            cls.model.objects.
+            filter(status__in=[Statuses.challenger, Statuses.waiting, Statuses.excluded]).
+            filter(status_updated=True).all().
             update(status_updated=False)
         )
 
+
     @classmethod
     @logger.catch
-    def get_members_for_mailing_new_status(cls: 'DBIUser') -> list:
-        """Получить список пользователей для рассылки"""
+    def get_members_for_mailing_new_status(cls: 'DBIUser') -> QuerySet:
+        """
+        Getting users for mailing excluding entered and returned.
+        """
         users = (
-            cls.model.objects.filter(status_updated=True).
+            cls.model.objects.only('telegram_id', 'got_invite', 'status').
                 filter(status__in=[Statuses.entered, Statuses.returned]).
+                filter(status_updated=True).filter(telegram_id__isnull=False).
                 filter(date_joining_club__month__lt=datetime.datetime.now().month).
-                filter(status__in=[Statuses.entered, Statuses.returned]).
-                filter(telegram_id__isnull=False).all()
+                all()
         )
-        return [user for user in users if user.telegram_id]
+        return users
+        # users = (
+        #     cls.model.objects.filter(status_updated=True).
+        #     filter(status__in=[Statuses.entered, Statuses.returned]).
+        #     filter(date_joining_club__month__lt=datetime.datetime.now().month).
+        #     filter(telegram_id__isnull=False).all()
+        # )
+        # return [user for user in users]
 
     @classmethod
     @logger.catch
     def un_set_status_updated_for_members(cls: 'DBIUser') -> list:
+        """
+        Removes the "updated" status for members club.
+        """
         return (
             cls.model.objects.filter(status_updated=True).
             filter(status__in=[Statuses.entered, Statuses.returned]).
@@ -230,14 +253,14 @@ class DBIUser:
     @logger.catch
     def get_users_which_can_be_chat(cls: 'DBIUser') -> list:
         """
-        return list of telegram ids for active users without admins
+        Return list of telegram ids for active users without admins
         return: list
         """
         return [
             user.telegram_id
             for user in cls.model.objects.only('telegram_id').
             filter(status__in=[Statuses.entered, Statuses.returned, Statuses.privileged]).
-            all() if user.telegram_id
+            filter(telegram_id__isnull=False).all()
         ]
 
     @classmethod

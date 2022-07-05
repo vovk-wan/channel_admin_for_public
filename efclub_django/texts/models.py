@@ -76,7 +76,7 @@ class GetcourseGroup(models.Model):
 
 
 class Channel(models.Model):
-    name = models.CharField(max_length=255, default='', verbose_name='id канала')
+    name = models.CharField(max_length=255, default='', verbose_name='Название канала')
     channel_id = models.BigIntegerField(unique=True, verbose_name='id канала')
 
     class Meta:

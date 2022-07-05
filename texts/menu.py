@@ -3,42 +3,43 @@ from typing import Callable
 
 from config import logger
 from models import Text
+from services import APITextInterface
 
 
 @dataclass
 class TextsUser:
     #  Приветственное сообщение Основное меню
-    start: Callable = Text.get_start_text
+    start: Callable = APITextInterface.get_start_text
 
     # Текст о клубе
-    about: Callable = Text.get_about_text
+    about: Callable = APITextInterface.get_about_text
 
     # Текст Прайс
-    prices: Callable = Text.get_prices_text
+    prices: Callable = APITextInterface.get_prices_text
 
     # Отзывы
-    reviews: Callable = Text.get_reviews_text
+    reviews: Callable = APITextInterface.get_reviews_text
 
     # Текст после хочу в клуб если нет в базе телеграм ид
-    not_in_base: Callable = Text.get_want_for_get_phone_text
+    not_in_base: Callable = APITextInterface.get_want_for_get_phone_text
 
     # Текст после хочу в клуб, но в базе только как претендент
-    challenger: Callable = Text.get_want_for_challenger_text
+    challenger: Callable = APITextInterface.get_want_for_challenger_text
 
     # Текст после хочу в клуб если оплатил в клубе и не получал ссылку
-    club_not_got_link: Callable = Text.get_want_for_entered_text
+    club_not_got_link: Callable = APITextInterface.get_want_for_entered_text
 
     # Текст после хочу в клуб, уже оплатил уже в клубе, но получал ссылку
-    club_got_link: Callable = Text.get_want_for_entered_got_link_text
+    club_got_link: Callable = APITextInterface.get_want_for_entered_got_link_text
 
     # Текст после хочу в клуб если не оплатил, но был уже в клубе
-    excluded: Callable = Text.get_want_for_excluded_text
+    excluded: Callable = APITextInterface.get_want_for_excluded_text
 
     # Текст если есть в листе ожидания
-    wait_list: Callable = Text.get_want_for_waiting_list_text
+    wait_list: Callable = APITextInterface.get_want_for_waiting_list_text
 
     # Текст сопровождение со ссылкой
-    get_invite_link: Callable = Text.get_for_invite_text
+    get_invite_link: Callable = APITextInterface.get_for_invite_text
 
     @classmethod
     @logger.catch

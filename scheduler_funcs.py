@@ -35,14 +35,14 @@ async def send_message_to_admin(text: str, keyboard: InlineKeyboardMarkup = None
 
 async def mailing_new_status(users: list):
     """Отправляет сообщение пользователям о смене статуса"""
-    messages: dict = MessageNewStatus.get_messages()
+    messages: dict = MessageNewStatus.get_messages()  # FIXME
     count = 0
     for user in users:
-        telegram_id = user.telegram_id
-        text = messages.get(user.status, '').strip()
+        telegram_id = user.get('telegram_id', 0)
+        text = messages.get(user.get('status'), '').strip()
         if text:
             try:
-                keyboard = make_keyboard_for_mailing(user.status, user.got_invite)
+                keyboard = make_keyboard_for_mailing(user.get('status'), user.get('got_invite'))
                 await bot.send_message(chat_id=telegram_id, text=text, reply_markup=keyboard)
                 count +=1
             except Exception as err:
@@ -110,8 +110,8 @@ async def channel_exclude_users(data: list, channels: list) -> None:
     :param channels: список каналов которые бот администрирует.
     :return: None
     """
-    getcourse_id = tuple(user.get('getcourse_id', None) for user in data)
-    list_for_exclude = User.get_list_users_for_exclude(getcourse_id=getcourse_id)
+    # getcourse_id = tuple(user.get('getcourse_id', None) for user in data)
+    list_for_exclude = User.get_list_users_for_exclude() # FIXME
     if list_for_exclude:
         for channel_data in channels:
             channel_id = channel_data.channel_id
@@ -133,9 +133,9 @@ async def channel_exclude_users(data: list, channels: list) -> None:
                 f'\n list of telegram ids of kicked users: {list_for_exclude}')
     else:
         logger.info(f'{EMOJI.like} No users to delete')
-    logger.debug('Starting delete users from DB')
-    count = User.exclude_user_by_getcourse_id(list(getcourse_id))
-    logger.info(f'{count}  users get status excluded')
+    # logger.debug('Starting delete users from DB')
+    # count = User.exclude_user_by_getcourse_id(list(getcourse_id))
+    # logger.info(f'{count}  users get status excluded')
 
 
 @logger.catch
@@ -204,7 +204,7 @@ async def channel_maintenance() -> None:
 
     logger.info(f'start channel maintenance: start')
 
-    channels: list = Channel.get_channels()
+    channels: list = Channel.get_channels()  # FIXME
     if not channels:
         await send_message_to_admin('Нет id канала, нужно добавить id канала и выбрать группу.\n'
                                     ' воспользуйтесь командой. \n/admin', keyboard_admin())
@@ -233,19 +233,20 @@ async def channel_maintenance() -> None:
         logger.error('not user list. club group work stopped ')
         return
 
+    count = add_new_users(data, SourceData.club) # FIXME
+    logger.info(f'{count} users updated to BD club group')
+
     logger.info(f'start channel maintenance: club group')
     await channel_exclude_users(data, channels)
 
-    count = add_new_users(data, SourceData.club)
-    logger.info(f'{count} users updated to BD club group')
-    users_with_updated_status = User.get_users_for_mailing_new_status()
+    users_with_updated_status = User.get_users_for_mailing_new_status()  # FIXME
 
     count = await mailing_new_status(users_with_updated_status)
 
-    User.un_set_status_updated_except_members()
+    User.un_set_status_updated_except_members()  # FIXME
     logger.info(f'{count} mail sends')
 
-    waiting_group_id = GetcourseGroup.get_waiting_group()
+    waiting_group_id = GetcourseGroup.get_waiting_group()  # FIXME
     if not waiting_group_id:
         await send_message_to_admin('Нет id группы листа ожидания, нужно выбрать группу.\n'
                                     'воспользуйтесь командой.\n/admin')
@@ -264,10 +265,11 @@ async def channel_maintenance() -> None:
         logger.error('not user list.  waiting list work stopped ')
         return
 
-    count = add_new_users(data, SourceData.waiting_list)
+    count = add_new_users(data, SourceData.waiting_list) # fixme
     logger.info(f'{count} users updated to BD waiting list group')
+
     getcourse_id = tuple(user.get('getcourse_id', None) for user in data)
-    count = User.delete_user_from_waiting_list_by_getcourse_id(list(getcourse_id))
+    count = User.delete_user_from_waiting_list_by_getcourse_id(list(getcourse_id))  # fixme
     logger.info(f'{count}  users delete from DB')
 
     users_with_updated_status = User.get_users_for_mailing_new_status()
@@ -308,9 +310,9 @@ async def kick_hackers():
 
 async def mailing_to_members():
     """mailing for member of club"""
-    users_with_updated_status = User.get_members_for_mailing_new_status()
+    users_with_updated_status = User.get_members_for_mailing_new_status()  # fixme
     count = await mailing_new_status(users_with_updated_status)
-    User.un_set_status_updated_for_members()
+    User.un_set_status_updated_for_members() # fixme
     logger.info(f'{count} mail sends')
 
 

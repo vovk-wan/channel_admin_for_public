@@ -9,8 +9,8 @@ from aiogram.types.chat import Chat
 
 from config import logger, bot, admins_list
 from keyboards import admin
-from models import GetcourseGroup, Channel, User, Text
-from models import Group
+# from models import GetcourseGroup, Channel, User, Text
+# from models import Group
 from scheduler_funcs import send_message_to_admin
 from states import AdminState, get_state_name
 from texts.menu import AdminTexts
