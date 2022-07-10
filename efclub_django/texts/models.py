@@ -67,7 +67,7 @@ class Text(models.Model):
 
 class GetcourseGroup(models.Model):
     waiting_group_id = models.CharField(
-        max_length=255, default='', verbose_name='id группы лист ожидания')
+        max_length=255, default='0', verbose_name='id группы лист ожидания')
     club_group_id = models.CharField(
         max_length=255, default='', verbose_name='id группы члены клуба')
 
@@ -110,7 +110,7 @@ class UserStatus(models.Model):
 class User(models.Model):
     """
     Model for table users
-     """
+    """
     statuses = [
         ('challenger', 'претендент'),
         ('waiting', 'В листе ожидания'),
@@ -141,7 +141,7 @@ class User(models.Model):
     class Meta:
         db_table = "users"
         verbose_name = 'пользователь'
-        verbose_name_plural = u'пользователи'
+        verbose_name_plural = 'пользователи'
 
 
 class MessageNewStatus(models.Model):

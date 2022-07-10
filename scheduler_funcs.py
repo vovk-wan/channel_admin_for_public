@@ -14,9 +14,11 @@ import states
 from config import bot, logger, EMOJI, REQUEST_LIMIT, REQUEST_RATE, KICK_RATE, admins_list
 from get_channel_info import get_channel_data
 from getcourse_requests import get_data, make_user_list_by_group, make_groups_list
-from models import User, Channel, Group, Statuses, SourceData, GetcourseGroup, MessageNewStatus
+from models import Statuses, SourceData
+# from models import User, Channel, Group, Statuses, SourceData, GetcourseGroup, MessageNewStatus
 from keyboards.admin import admin as keyboard_admin
 from keyboards.user import make_keyboard_for_mailing
+from services import APIMessageNewStatusInterface
 
 
 @logger.catch
@@ -35,7 +37,7 @@ async def send_message_to_admin(text: str, keyboard: InlineKeyboardMarkup = None
 
 async def mailing_new_status(users: list):
     """Отправляет сообщение пользователям о смене статуса"""
-    messages: dict = MessageNewStatus.get_messages()  # FIXME
+    messages: dict = APIMessageNewStatusInterface.get_messages()  # FIXME
     count = 0
     for user in users:
         telegram_id = user.get('telegram_id', 0)
@@ -44,7 +46,7 @@ async def mailing_new_status(users: list):
             try:
                 keyboard = make_keyboard_for_mailing(user.get('status'), user.get('got_invite'))
                 await bot.send_message(chat_id=telegram_id, text=text, reply_markup=keyboard)
-                count +=1
+                count += 1
             except Exception as err:
                 logger.error(f'{err} ')
     return count

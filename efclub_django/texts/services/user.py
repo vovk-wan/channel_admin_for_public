@@ -42,7 +42,7 @@ class DBIUser:
 
     @classmethod
     @logger.catch
-    def update_users(cls: 'DBIUser', users: list, source: str) -> int:
+    def update_users(cls: 'DBIUser', users: list[dict], source: str) -> int:
         """
         Adding new users and updating data for users in the list
         """
@@ -177,16 +177,13 @@ class DBIUser:
 
     @classmethod
     @logger.catch
-    def get_users_from_waiting_list(cls: 'DBIUser') -> list:
+    def get_users_from_waiting_list(cls: 'DBIUser') -> QuerySet:
         """
         return list of telegram ids for users from waiting list
-        return: list
+        return: QuerySet
         """
-        return [
-            user.telegram_id
-            for user in cls.model.objects.filter(status=Statuses.waiting).
-            filter(telegram_id__isnull=False).all()
-        ]
+        return cls.model.objects.filter(status=Statuses.waiting).filter(telegram_id__isnull=False).all()
+
 
     @classmethod
     @logger.catch

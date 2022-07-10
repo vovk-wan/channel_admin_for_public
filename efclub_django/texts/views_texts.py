@@ -71,6 +71,12 @@ class GetWantClubForEnteredTextViewSet(views.APIView):
         return Response(status=status.HTTP_200_OK, data={'text': result})
 
 
+class GetWantClubForWaitingListTextViewSet(views.APIView):
+    def get(self, request):
+        result = DBIText.get_want_for_waiting_list_text()
+        return Response(status=status.HTTP_200_OK, data={'text': result})
+
+
 class GetWantClubForGotLinkTextViewSet(views.APIView):
     def get(self, request):
         result = DBIText.get_want_for_entered_got_link_text()

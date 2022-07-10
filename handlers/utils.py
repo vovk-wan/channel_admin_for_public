@@ -2,26 +2,28 @@ import datetime
 from functools import wraps
 from typing import Union, List, Callable, Any
 
-from models import User, Statuses, Channel
+from models import Statuses
+# from models import User, Statuses, Channel
 from aiogram.types import Chat, Message
 from config import logger, bot
+from services import APIUsersInterface, APIChannelsInterface
 
 
 @logger.catch
-def get_position(user: User) -> str:
+def get_position(user: dict) -> str:
     result = 'challenger'
 
-    if user.status == Statuses.challenger:
+    if user.get('status') == Statuses.challenger:
         result = 'challenger'
-    elif user.status in (
-            Statuses.entered, Statuses.returned, Statuses.privileged) and user.got_invite:
+    elif user.get('status') in (
+            Statuses.entered, Statuses.returned, Statuses.privileged) and user.get('got_invite'):
         result = 'club_got_link'
-    elif user.status in (
-            Statuses.entered, Statuses.returned, Statuses.privileged) and not user.got_invite:
+    elif user.get('status') in (
+            Statuses.entered, Statuses.returned, Statuses.privileged) and not user.get('got_invite'):
         result = 'club_not_got_link'
-    elif user.status == Statuses.excluded:
+    elif user.get('status') == Statuses.excluded:
         result = 'excluded'
-    elif user.status == Statuses.waiting:
+    elif user.get('status') == Statuses.waiting:
         result = 'wait_list'
 
     return result
@@ -32,8 +34,8 @@ def get_user_position(telegram_id: int) -> str:
     """
     Запрашивает в каком списке находится пользователь вернуть строкой позицию    примерный выбор
     """
-    user = User.get_users_by_telegram_id(telegram_id=telegram_id)
-    if user:
+    user = APIUsersInterface.get_users_by_telegram_id(telegram_id=telegram_id)
+    if user.get('status'):
         return get_position(user)
 
     return 'not_in_base'
@@ -45,9 +47,10 @@ def get_user_access(telegram_id: int) -> bool:
     Возвращает доступ пользователя к каналам и группам
     """
     access = False
-    user = User.get_users_by_telegram_id(telegram_id=telegram_id)
+    user = APIUsersInterface.get_users_by_telegram_id(telegram_id=telegram_id)
     if user:
-        access = user.date_joining_club.month < datetime.datetime.now().month
+        month = datetime.datetime.strptime(user.get('date_joining_club'), "%Y-%m-%dT%H:%M:%S").month
+        access = month < datetime.datetime.now().month
     return access
 
 
@@ -76,12 +79,12 @@ async def get_channel_admin(channels: Union[Chat, List[Chat]]) -> tuple:
 @logger.catch
 async def get_all_admins() -> tuple:
     """Function returned all admins for saved channel"""
-    data = Channel.get_channels()
+    data = APIChannelsInterface.get_channels()
 
     channels = []
     for ch in data:
         try:
-            result = await bot.get_chat(ch.channel_id)
+            result = await bot.get_chat(ch.get('channel_id'))
             if result:
                 channels.append(result)
         except Exception as err:

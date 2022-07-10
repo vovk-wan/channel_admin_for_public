@@ -17,10 +17,10 @@ class DBIGroup:
 
     @classmethod
     @logger.catch
-    def get_all_group(cls) -> tuple[tuple, ...]:
+    def get_all_group(cls) -> list[list, ...]:
         """Возвращает список групп в виде пар кортежей """
         groups: list['Group'] = list(cls.model.objects.all())
-        return tuple((group.group_id, group.name) for group in groups)
+        return [[group.group_id, group.name] for group in groups]
 
     @classmethod
     @logger.catch

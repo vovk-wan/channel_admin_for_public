@@ -1,13 +1,15 @@
 from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.generics import GenericAPIView, CreateAPIView, views
-from rest_framework.mixins import ListModelMixin, CreateModelMixin
+from rest_framework import status, viewsets
+from rest_framework.generics import get_object_or_404, GenericAPIView, CreateAPIView, views, UpdateAPIView, RetrieveUpdateAPIView
+from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin
+
 from texts.models import User, UserStatus, Group, GetcourseGroup, MessageNewStatus
 from texts.serializers import (
     UserSerializerModel,
     UpdateUserSerializerModel,
     TelegramIDSerializerModel,
-    MailingSerializerModel, SetGroupIdSerializerModel
+    MailingSerializerModel, SetGroupIdSerializerModel,
+    GetUserSerializerModel, ChallengerSerializerModel, GotInvitedSerializerModel
 )
 from texts.services.getcourse_group import DBIGetcourseGroup
 from texts.services.user import DBIUser
@@ -45,21 +47,6 @@ class UpdateUsersViewSet(ListModelMixin, CreateModelMixin, GenericAPIView):
         return self.create(request, many=True)
 
 
-# class UsersForExcludeViewSet(ListModelMixin, GenericAPIView):
-#     serializer_class = TelegramIDSerializerModel
-#     queryset = DBIUser.get_list_users_for_exclude()
-#
-#     def list(self, request, *args, **kwargs):
-#         queryset = self.filter_queryset(self.get_queryset())
-#         serializer = self.get_serializer(queryset, many=True)
-#         users = serializer.data
-#         data = [user.get('telegram_id') for user in users]
-#         return Response(status=status.HTTP_200_OK, data=data)
-#
-#     def get(self, request):
-#         return self.list(request)
-
-
 class GetExcludeUsersViewSet(ListModelMixin, GenericAPIView):
     serializer_class = TelegramIDSerializerModel
     queryset = DBIUser.get_list_users_for_exclude()
@@ -87,7 +74,16 @@ class GetUsersForMailingNewStatusViewSet(ListModelMixin, GenericAPIView):
 class GetMembersForMailingNewStatusViewSet(ListModelMixin, GenericAPIView):
     serializer_class = MailingSerializerModel
     queryset = DBIUser.get_members_for_mailing_new_status()
-    model = User
+    model = DBIUser.model
+
+    def get(self, request):
+        return self.list(request)
+
+
+class GetUsersForWaitingListWithTelegramIdViewSet(ListModelMixin, GenericAPIView):
+    serializer_class = MailingSerializerModel
+    queryset = DBIUser.get_users_from_waiting_list()
+    model = DBIUser.model
 
     def get(self, request):
         return self.list(request)
@@ -105,55 +101,38 @@ class RemovesStatusUpdatedMembersViewSet(views.APIView):
         return Response(status=status.HTTP_200_OK, data={'updated_users': result})
 
 
-class GetGroupViewSet(views.APIView):
-    def get(self, request, *args, **kwargs):
-        group_name = kwargs.get('group')
-        result = DBIGetcourseGroup.get_group(group_name=group_name)
-        return Response(status=status.HTTP_200_OK, data=result)
+class GetUserByTelegramIDViewSet(RetrieveModelMixin, GenericAPIView):
+    serializer_class = GetUserSerializerModel
 
-
-class SetGroupViewSet(GenericAPIView):
-    serializer_class = SetGroupIdSerializerModel
-    def post(self, request, *args, **kwargs):
-        group_name = kwargs.get('group_name')
-        group_id = request.data.get('group_id')
-        result = DBIGetcourseGroup.set_group(group_id=group_id, group_name=group_name)
-        return Response(status=status.HTTP_200_OK, data=result)
+    def get_object(self):
+        telegram_id = self.kwargs.get('telegram_id')
+        return DBIUser.get_users_by_telegram_id(telegram_id=telegram_id)
 
     def get(self, request, *args, **kwargs):
-        return Response()
+        return self.retrieve(request)
 
 
-class UpdateFromGetcourse(views.APIView):
-    def get(self, request):
-        settings.LOGGER.info('мы тута')
-        return Response(status=status.HTTP_200_OK, data={'result': 'ok'})
+# class UpdateFromGetcourse(views.APIView):
+#     def get(self, request):
+#         settings.LOGGER.info('мы тута')
+#         return Response(status=status.HTTP_200_OK, data={'result': 'ok'})
 
 
-class BookViewSet(ListModelMixin, GenericAPIView):
-    serializer_class = UserSerializerModel
-    # pagination_class = MyResultsSetPagination
+class AddChallengerViewSet(CreateAPIView, GenericAPIView):
+    serializer_class = ChallengerSerializerModel
+    interface = DBIUser
 
-    def get_queryset(self):
-        queryset = User.objects.all()
-        #
-        # if name := self.request.query_params.get('name'):
-        #     queryset = queryset.filter(name=name)
-        #
-        # if author_name := self.request.query_params.get('author_name'):
-        #     queryset = queryset.filter(author__name=author_name)
-        #
-        # if pages_min := self.request.query_params.get('pages_min'):
-        #     queryset = queryset.filter(number_pages__gte=pages_min)
-        #
-        # if pages_max := self.request.query_params.get('pages_max'):
-        #     queryset = queryset.filter(number_pages__lte=pages_max)
-        #
-        # if pages := self.request.query_params.get('pages'):
-        #     queryset = queryset.filter(number_pages=pages)
+    def perform_create(self, serializer):
+        self.interface.add_challenger(**serializer.data)
 
-        return queryset
 
-    def get(self, request):
-        return self.list(request.data)
+class GotInvitedViewSet(RetrieveUpdateAPIView):
+    serializer_class = GotInvitedSerializerModel
+    interface = DBIUser
+
+    def get_object(self):
+        self.request.data['got_invite'] = True
+        telegram_id = self.kwargs.get('telegram_id')
+        instance = get_object_or_404(self.interface.model.objects,telegram_id=telegram_id)
+        return instance
 

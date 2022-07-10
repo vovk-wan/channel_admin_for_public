@@ -19,6 +19,9 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('texts.urls')),
-    path('api/', include('texts.urls_texts'))
-    path('api/', include('texts.url_getcourse_group'))
+    path('api/', include('texts.urls_texts')),
+    path('api/', include('texts.url_getcourse_group')),
+    path('api/', include('texts.url_channels')),
+    path('api/', include('texts.urls_group')),
+    path('api/', include('texts.urls_message_new_status')),
 ]

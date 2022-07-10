@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 from config import logger
-from models import Text
+# from models import Text
 from services import APITextInterface
 
 

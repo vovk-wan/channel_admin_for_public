@@ -4,9 +4,10 @@ from aiogram.types import (
     ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton)
 
 from config import logger
-from models import Text
+# from models import Text
 from handlers.utils import get_user_position, get_user_access
 from models import Statuses
+from services import APITextInterface
 
 
 @logger.catch
@@ -76,7 +77,7 @@ def inline_button_link_user_menu() -> InlineKeyboardButton:
 @logger.catch
 def inline_button_link_wait_list() -> InlineKeyboardButton:
     """Возвращает кнопку с инвайт ссылкой на лист ожидания"""
-    url = Text.get_link_waiting_list_text()
+    url = APITextInterface.get_link_waiting_list_text()
     return InlineKeyboardButton(
         text='Ссылка на лист ожидания', callback_data='start', url=url)
 
@@ -120,8 +121,8 @@ def about_(*args, **kwargs) -> InlineKeyboardMarkup:
 
 
 @logger.catch
-def link_pay_waiting_list_menu() -> InlineKeyboardMarkup:
-    url: str = Text.get_link_to_pay()
+def link_pay_waiting_list_menu(url: str) -> InlineKeyboardMarkup:
+    # url: str = APITextInterface.get_link_to_pay()
     try:
         keyboard = InlineKeyboardMarkup().row(
             inline_button_link_user_menu(),
@@ -148,7 +149,7 @@ def want_(*args, **kwargs) -> InlineKeyboardMarkup:
 @logger.catch
 def excluded_(*args, **kwargs) -> InlineKeyboardMarkup:
     """keyboard for excluded users """
-    url: str = Text.get_link_to_pay()
+    url: str = APITextInterface.get_link_to_pay()
 
     return InlineKeyboardMarkup(row_width=2).add(
             inline_button_start(),

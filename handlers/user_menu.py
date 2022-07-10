@@ -14,8 +14,10 @@ from config import logger, bot, EMOJI, LINK_EXPIRATION_TIME
 from handlers import utils
 from handlers.utils import get_all_admins, check_message_private
 from keyboards import user
-from models import User, Channel, Statuses
+from models import Statuses
+# from models import User, Channel, Statuses
 from scheduler_funcs import send_message_to_admin
+from services import APIUsersInterface, APIChannelsInterface
 from states import MenuState
 # from handlers.admin_menu import admin_menu_handler
 from texts.menu import TextsUser
@@ -227,7 +229,7 @@ async def add_phone_number(message: Message, state: FSMContext):
         return
     logger.info('Processing of invitation link requests begins :')
 
-    user_data = User.add_challenger(telegram_id=telegram_id, phone=phone)
+    user_data = APIUsersInterface.add_challenger(telegram_id=telegram_id, phone=phone)
     new_state = 'start'
     if user_data:
         new_state = utils.get_position(user_data)
@@ -244,19 +246,19 @@ async def get_link(telegram_id: int) -> str:
     # channel_id = Channel.get_channel()
     # if not channel_id:
     #     return
-    user_data: User = User.get_users_by_telegram_id(telegram_id=telegram_id)
+    user_data: dict = APIUsersInterface.get_users_by_telegram_id(telegram_id=telegram_id)
     if not user_data:
         await send_message_to_admin(f'ссылку запросил пользователь отсутствующий в базе\n'
                                     f'телеграм {telegram_id}')
         return 'https://google.com'
 
-    if user_data.status not in [Statuses.entered, Statuses.returned, Statuses.privileged]:
+    if user_data.get('status') not in [Statuses.entered, Statuses.returned, Statuses.privileged]:
         return 'Вас нет в списках членов клуба, ссылка выслана не будет.'
-    if user_data.status not in [Statuses.entered, Statuses.returned, Statuses.privileged]:
-        month = user_data.date_joining_club.month
+    if user_data.get('status') not in [Statuses.entered, Statuses.returned, Statuses.privileged]:
+        month = datetime.datetime.strptime(user.get('date_joining_club'), "%Y-%m-%dT%H:%M:%S").month
         return f'Доступ откроется 1 - {month}'
 
-    access = not user_data.got_invite
+    access = not user_data.get('got_invite')
     answer = ''
     if not access:
         admins_name: tuple = await get_all_admins()
@@ -267,7 +269,7 @@ async def get_link(telegram_id: int) -> str:
         answer += '\n' + '\n'.join(admins_name)
         return answer
     expire_date = datetime.datetime.now() + datetime.timedelta(hours=LINK_EXPIRATION_TIME)
-    data = Channel.get_channels()
+    data = APIChannelsInterface.get_channels()
     if not data:
         return ('Не обнаружено доступных каналов.\n'
                 'Попробуете сделать запрос позже.')
@@ -294,7 +296,7 @@ async def get_link(telegram_id: int) -> str:
                 member_limit=1
             )
             answer += f'\n{channel.full_name}\n{link.invite_link}'
-            User.got_invited(telegram_id=telegram_id)
+            APIUsersInterface.got_invited(telegram_id=telegram_id)
         except Exception as err:
             logger.error(err)
 

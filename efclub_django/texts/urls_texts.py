@@ -15,6 +15,7 @@ from texts.views_texts import (
     GetWantClubForGotLinkTextViewSet,
     GetLinkWaitingListTextViewSet,
     GetLinkToPayTextViewSet,
+    GetWantClubForWaitingListTextViewSet,
 
 )
 
@@ -30,6 +31,7 @@ urlpatterns = [
     path('text/want_club/', GetWantClubTextViewSet.as_view(), name='want_club_text'),
     path('text/want_club_for_excluded/', GetWantClubForExcludedTextViewSet.as_view(), name='want_club_for_excluded_text'),
     path('text/want_club_for_entered/', GetWantClubForEnteredTextViewSet.as_view(), name='want_club_for_entered_text'),
+    path('text/want_club_for_waiting_list/', GetWantClubForWaitingListTextViewSet.as_view(), name='want_club_for_waithing_text'),
     path('text/want_club_for_got_link/', GetWantClubForGotLinkTextViewSet.as_view(), name='want_club_for_got_link_text'),
     path('text/waiting_list_link/', GetLinkWaitingListTextViewSet.as_view(), name='waiting_list_link_text'),
     path('text/pay_link/', GetLinkToPayTextViewSet.as_view(), name='waiting_list_link_text'),
