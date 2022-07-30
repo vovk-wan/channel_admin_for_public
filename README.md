@@ -52,9 +52,3 @@ exec python3 -m venv env && source ./env/bin/activate && python3 -m pip install 
 Он попросит ввести токен - нужно ввести токен бота, который находится в канале.
 5. Перезапустить бота (контейнер)
 
-
-Доступ на сервер пользователям:
-sudo vim /etc/ssh/sshd_config
-AllowUsers root deskent      <- здесь перечислить кому дать доступ по shh
-
-sudo service ssh restart
